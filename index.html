@@ -111,6 +111,7 @@ details.ae[open] summary{border-bottom:1px solid var(--ln)}
 @media print{header,.bn,.dn,.noprint,#toast{display:none!important}body,body.gated{padding:0;background:#fff}.card,details.ae{box-shadow:none}}
 .stack{display:grid;gap:10px}.tag.ok{background:#e3f0ea;color:var(--in)}
 @media(min-width:860px){#toast{bottom:32px}}
+input.amt2{font:26px 'DM Serif Display',serif;text-align:center;color:var(--dg);min-height:56px}
 </style></head><body><div id="app"></div>
 <script>
 const K='rfm_v2',IT=600000,$=s=>document.querySelector(s),enc=new TextEncoder(),dec=new TextDecoder();
@@ -143,35 +144,45 @@ const OKR=r=>/^data:(image\/(jpeg|png)|application\/pdf);base64,[A-Za-z0-9+\/=]+
 const uid=()=>crypto.randomUUID();
 const CATS={Food:['Vegetables','Fruits','Meat','Chicken','Seafood','Dairy','Grocery','Spices','Oil','Bakery','Beverages'],Operations:['Rent','Electricity','Water','Gas','Internet','Repairs','Cleaning','Maintenance','Pest control'],Staff:['Salary','Wages','Staff meals','Uniforms','Transportation'],Marketing:['Social media','Advertising','Promotions','Printing'],Admin:['Licenses','Software','Accounting','Bank charges','Office expenses'],Equipment:['Kitchen equipment','Furniture','Appliances','Renovation'],Other:['Miscellaneous']};
 const INC=['Restaurant sales','Online orders','Catering','Delivery','Event sales','Other income'];
-const METH=['Cash','UPI','Card','Bank transfer','Cheque','Other'];
+const METH=['Cash','UPI','Cash+UPI','Card','Bank transfer','Cheque','Other'];
 // s=needs source, d=needs destination, o=owner, c=category kind
 const T={income:{l:'Income',d:1,c:'i'},expense:{l:'Expense',s:1,c:'e',pers:1},invest:{l:'Owner investment',d:1,o:1},withdraw:{l:'Owner withdrawal',s:1,o:1},loanin:{l:'Loan received',d:1},loanrepay:{l:'Loan repayment (principal)',s:1},interest:{l:'Loan interest',s:1},transfer:{l:'Transfer',s:1,d:1},refund:{l:'Refund received',d:1,c:'e'},reimb:{l:'Reimbursement to owner',s:1,o:1},supplier:{l:'Supplier payment',s:1,c:'e'},adjust:{l:'Adjustment',d:1},reversal:{l:'Reversal'}};
-let U=null,V='home',F={q:'',type:'',acct:'',owner:'',n:25},AT='expense',last=Date.now(),lock={n:0,until:0},ADD={key:uid(),busy:0,rcp:''};
+let U=null,V='home',F={q:'',type:'',acct:'',owner:'',n:25},HF={from:'',to:''},AT='expense',last=Date.now(),lock={n:0,until:0},ADD={key:uid(),busy:0,rcp:''};
 const owner=id=>(S.owners.find(o=>o.id===id)||{}).name||'—';
 const acc=id=>(S.accounts.find(a=>a.id===id)||{}).name||'—';
-const bal=a=>a.open+S.tx.reduce((s,t)=>s+t.led.filter(l=>l[0]===a.id).reduce((x,l)=>x+l[1],0),0);
+const rawBal=a=>a.open+S.tx.reduce((s,t)=>s+t.led.filter(l=>l[0]===a.id).reduce((x,l)=>x+l[1],0),0);
+const ownT=t=>['invest','withdraw'].includes(t.type)||(t.type==='reversal'&&['invest','withdraw'].includes((S.tx.find(x=>x.id===t.rev)||{}).type));
+const bal=a=>a.open+S.tx.filter(t=>!ownT(t)).reduce((s,t)=>s+t.led.filter(l=>l[0]===a.id).reduce((x,l)=>x+l[1],0),0);
 const live=()=>S.tx.filter(t=>t.status==='posted'&&t.type!=='reversal');
 const sum=(arr,f)=>arr.reduce((s,t)=>s+f(t),0);
 // effect on profit: income minus (expenses+interest+supplier) plus refunds. Investments, loans, transfers, withdrawals excluded.
 const inc=t=>t.type==='income'?t.amt:0;
 const exp=t=>['expense','interest','supplier'].includes(t.type)?t.amt:t.type==='refund'?-t.amt:0;
+const pay=(t,s)=>{if(t.method==='Cash+UPI'&&t.split)return s==='c'?(t.split.c||0):s==='u'?(t.split.u||0):0;const m=t.method||'Cash';if(s==='c')return m==='Cash'?t.amt:0;if(s==='u')return m==='UPI'?t.amt:0;return ['Cash','UPI'].includes(m)?0:t.amt};
 function audit(a,id,prev,next,why){S.audit.push({ts:new Date().toISOString(),by:U.id,a,id,prev,next,why:why||''})}
 function addTx(f){
  const def=T[f.type];if(!def)throw Error('Invalid type');['desc','vendor','ref','notes','cat','method'].forEach(k=>f[k]=String(f[k]||'').slice(0,k==='notes'?500:120));
- if(S.idem[f.key])throw Error('Already saved (duplicate submission blocked).');
- const amt=P(f.amount);if(!amt)throw Error('Enter a valid amount (up to 2 decimals).');
- if(!/^\d{4}-\d\d-\d\d$/.test(f.date)||isNaN(Date.parse(f.date))||f.date<'2000-01-01'||f.date>new Date(Date.now()+864e5*366).toISOString().slice(0,10))throw Error('Pick a valid date.');
- if(amt>1e10)throw Error('Amount exceeds the ₹10 crore limit.');
- if(def.c&&!(def.c==='i'?INC:[...Object.values(CATS).flat(),...S.cats]).includes(f.cat))throw Error('Choose a valid category.');
- if(f.own&&!S.owners.some(o=>o.id===f.own))throw Error('Choose a valid owner.');
- const pers=def.pers&&f.src==='personal';
- if(def.s&&!pers&&!S.accounts.some(a=>a.id===f.src))throw Error('Choose an account.');
- if(def.d&&!S.accounts.some(a=>a.id===f.dst))throw Error('Choose a destination account.');
- if(def.s&&def.d&&f.src===f.dst)throw Error('Source and destination must differ.');
- if(f.type==='adjust'&&!f.notes)throw Error('Adjustments need a reason.');
- const t={id:'T'+String(S.seq).padStart(5,'0'),type:f.type,amt,date:f.date,desc:f.desc||'',cat:f.cat||'',vendor:f.vendor||'',method:f.method||'',src:pers?'':f.src||'',dst:f.dst||'',by:U.id,own:def.o?f.own||U.id:'',pers:pers?(f.own||U.id):'',ts:new Date().toISOString(),upd:new Date().toISOString(),ref:f.ref||'',notes:f.notes||'',rcp:f.rcp||'',status:'posted',led:[]};
- if(def.s&&!pers)t.led.push([f.src,-amt]);if(def.d)t.led.push([f.dst,amt]);
- S.seq++;S.idem[f.key]=t.id;S.tx.push(t);audit('create',t.id,null,{type:t.type,amt},'');return t}
+  if(S.idem[f.key])throw Error('Already saved (duplicate submission blocked).');
+  const pers=def.pers&&f.src==='personal';
+  const split=f.method==='Cash+UPI'&&['income','expense','supplier','refund'].includes(f.type);
+  let amt,cash=0,upi=0;
+  if(split){cash=P(f.cashAmt||'0');upi=P(f.upiAmt||'0');if(!cash&&!upi)throw Error('Enter cash and/or UPI amounts.');
+   if(pers)throw Error('Split payments need two accounts, not a personal payment.');
+   if(!S.accounts.some(a=>a.id===f.splitacc))throw Error('Choose the second account for the split.');
+   if((def.s?f.src:f.dst)===f.splitacc)throw Error('The two accounts must be different.');amt=cash+upi}
+  else{amt=P(f.amount);if(!amt)throw Error('Enter a valid amount (up to 2 decimals).')}
+  if(!/^\d{4}-\d\d-\d\d$/.test(f.date)||isNaN(Date.parse(f.date))||f.date<'2000-01-01'||f.date>new Date(Date.now()+864e5*366).toISOString().slice(0,10))throw Error('Pick a valid date.');
+  if(amt>1e10)throw Error('Amount exceeds the ₹10 crore limit.');
+  if(def.c&&!(def.c==='i'?INC:[...Object.values(CATS).flat(),...S.cats]).includes(f.cat))throw Error('Choose a valid category.');
+  if(f.own&&!S.owners.some(o=>o.id===f.own))throw Error('Choose a valid owner.');
+  if(def.s&&!pers&&!S.accounts.some(a=>a.id===f.src))throw Error('Choose an account.');
+  if(def.d&&!S.accounts.some(a=>a.id===f.dst))throw Error('Choose a destination account.');
+  if(def.s&&def.d&&f.src===f.dst)throw Error('Source and destination must differ.');
+  if(f.type==='adjust'&&!f.notes)throw Error('Adjustments need a reason.');
+  const t={id:'T'+String(S.seq).padStart(5,'0'),type:f.type,amt,date:f.date,desc:f.desc||'',cat:f.cat||'',vendor:f.vendor||'',method:f.method||'',src:pers?'':f.src||'',dst:f.dst||'',by:U.id,own:def.o?f.own||U.id:'',pers:pers?(f.own||U.id):'',ts:new Date().toISOString(),upd:new Date().toISOString(),ref:f.ref||'',notes:f.notes||'',rcp:f.rcp||'',status:'posted',split:split?{c:cash,u:upi}:null,splitacc:split?f.splitacc:'',led:[]};
+  if(split){const prim=def.s?f.src:f.dst,sg=def.s?-1:1;t.led.push([prim,sg*cash],[f.splitacc,sg*upi])}
+  else{if(def.s&&!pers)t.led.push([f.src,-amt]);if(def.d)t.led.push([f.dst,amt])}
+  S.seq++;S.idem[f.key]=t.id;S.tx.push(t);audit('create',t.id,null,{type:t.type,amt},'');return t}
 const dup=f=>live().find(t=>t.amt===P(f.amount)&&t.date===f.date&&t.type===f.type&&t.cat===(f.cat||'')&&t.vendor===(f.vendor||'')&&t.src===(f.src||''));
 function reverse(id,why){const o=S.tx.find(t=>t.id===id);if(!o||o.status!=='posted'||o.type==='reversal')return;
  const r={...o,id:'T'+String(S.seq++).padStart(5,'0'),type:'reversal',rev:o.id,by:U.id,ts:new Date().toISOString(),upd:new Date().toISOString(),notes:'Reversal of '+o.id+': '+why,status:'posted',led:o.led.map(l=>[l[0],-l[1]]),rcp:''};
@@ -222,24 +233,31 @@ let hid=0;document.addEventListener('visibilitychange',()=>{if(document.hidden)h
 window.addEventListener('storage',e=>{if(e.key===K&&U){VT=JSON.parse(e.newValue);logout();toast('Data changed in another tab. Locked for safety.',1)}});
 // ---------- VIEWS ----------
 const month=(d)=>d.slice(0,7);
-function home(){const L=live(),cash=sum(S.accounts,bal),I=sum(L,inc),E=sum(L,exp),inv=sum(L.filter(t=>t.type==='invest'),t=>t.amt),wd=sum(L.filter(t=>t.type==='withdraw'),t=>t.amt);
- const loans=sum(L.filter(t=>t.type==='loanin'),t=>t.amt)-sum(L.filter(t=>t.type==='loanrepay'),t=>t.amt);
- const owed=sum(L.filter(t=>t.pers),t=>t.amt)-sum(L.filter(t=>t.type==='reimb'),t=>t.amt);
- const ms=[];for(let i=5;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);ms.push(d.toISOString().slice(0,7))}
- const mx=Math.max(1,...ms.map(m=>Math.max(sum(L.filter(t=>month(t.date)===m),inc),sum(L.filter(t=>month(t.date)===m),exp))));
- const cats={};L.forEach(t=>{if(exp(t)&&t.cat)cats[t.cat]=(cats[t.cat]||0)+exp(t)});const top=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,5);
- return `<div class="card hero"><small>Total money available (cash, not profit)</small><div class="big num">${R(cash)}</div></div>
+function home(){const ALL=live(),L=ALL.filter(t=>(!HF.from||t.date>=HF.from)&&(!HF.to||t.date<=HF.to));
+  const cash=sum(S.accounts,bal),I=sum(L,inc),E=sum(L,exp),inv=sum(L.filter(t=>t.type==='invest'),t=>t.amt),wd=sum(L.filter(t=>t.type==='withdraw'),t=>t.amt);
+  const loans=sum(L.filter(t=>t.type==='loanin'),t=>t.amt)-sum(L.filter(t=>t.type==='loanrepay'),t=>t.amt);
+  const owed=sum(L.filter(t=>t.pers),t=>t.amt)-sum(L.filter(t=>t.type==='reimb'),t=>t.amt);
+  const ms=[];
+  if(HF.from&&HF.to){let[y,m]=HF.from.split('-').map(Number),[y2,m2]=HF.to.split('-').map(Number),n=0;while((y<y2||(y===y2&&m<=m2))&&n<12){ms.push(y+'-'+String(m).padStart(2,'0'));m++;if(m>12){m=1;y++}n++}}
+  else{const d=new Date();d.setDate(1);for(let i=5;i>=0;i--){const x=new Date(d);x.setMonth(d.getMonth()-i);ms.push(x.toISOString().slice(0,7))}}
+  const mx=Math.max(1,...ms.map(m=>Math.max(sum(L.filter(t=>month(t.date)===m),inc),sum(L.filter(t=>month(t.date)===m),exp))));
+  const cats={};L.forEach(t=>{if(exp(t)&&t.cat)cats[t.cat]=(cats[t.cat]||0)+exp(t)});const top=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const ins=L.filter(t=>['income','refund'].includes(t.type)),outs=L.filter(t=>['expense','supplier','interest'].includes(t.type));
+  const fcard=`<div class="card noprint"><div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap"><div style="flex:1;min-width:130px"><label>From</label><input type="date" value="${HF.from}" onchange="HF.from=this.value;render()"></div><div style="flex:1;min-width:130px"><label>To</label><input type="date" value="${HF.to}" onchange="HF.to=this.value;render()"></div><button class="b g sm" onclick="HF.from='';HF.to='';render()">All time</button></div><div class="k" style="margin-top:6px">${HF.from||HF.to?'Showing '+esc(HF.from||'beginning')+' → '+esc(HF.to||'today'):'Showing all dates · investment excluded from total money'}</div></div>`;
+  const paycard=`<div class="card"><h2>Payment methods</h2>${[['Cash received',sum(ins,t=>pay(t,'c')),'in'],['UPI / online received',sum(ins,t=>pay(t,'u')),'in'],['Cash spent',sum(outs,t=>pay(t,'c')),'ex'],['UPI / online spent',sum(outs,t=>pay(t,'u')),'ex'],['Other methods received',sum(ins,t=>pay(t,'o')),''],['Other methods spent',sum(outs,t=>pay(t,'o')),'']].map(([k,v,c])=>`<div class="row"><div class="d">${k}</div><div class="a num ${c}">${R(v)}</div></div>`).join('')}</div>`;
+  return `${fcard}<div class="card hero"><small>Total money available (cash, not profit · investments excluded)</small><div class="big num">${R(cash)}</div></div>
  <div class="qa">${[['expense','Expense','↑'],['income','Income','↓'],['invest','Invest','+'],['transfer','Transfer','⇄'],['loanin','Loan','◇'],['withdraw','Withdraw','←'],['supplier','Supplier','▤']].map(([t,l,g])=>`<button onclick="goAdd('${t}')"><b>${g}</b>${l}</button>`).join('')}</div>
  <div class="grid"><div class="card"><div class="k">Income</div><div class="v in num">${R(I)}</div></div><div class="card"><div class="k">Expenses</div><div class="v ex num">${R(E)}</div></div>
  <div class="card"><div class="k">Estimated profit / loss</div><div class="v num">${R(I-E)}</div></div><div class="card"><div class="k">Net operating cash</div><div class="v num">${R(I-E)}</div></div>
- <div class="card"><div class="k">Owner investments</div><div class="v num">${R(inv)}</div></div><div class="card"><div class="k">Owner withdrawals</div><div class="v num">${R(wd)}</div></div>
- <div class="card"><div class="k">Outstanding loans</div><div class="v num">${R(loans)}</div></div><div class="card"><div class="k">Owed to owners</div><div class="v num">${R(owed)}</div></div></div>
+  <div class="card"><div class="k">Owner investments</div><div class="v num">${R(inv)}</div></div><div class="card"><div class="k">Owner withdrawals</div><div class="v num">${R(wd)}</div></div>
+  <div class="card"><div class="k">Outstanding loans</div><div class="v num">${R(loans)}</div></div><div class="card"><div class="k">Owed to owners</div><div class="v num">${R(owed)}</div></div></div>
  <div class="card" style="margin-top:12px"><h2>Income vs expenses</h2><div class="cols">${ms.map(m=>`<div title="${m}"><i style="height:${sum(L.filter(t=>month(t.date)===m),inc)/mx*100}%;background:var(--in)"></i><i style="height:${sum(L.filter(t=>month(t.date)===m),exp)/mx*100}%;background:var(--ex)"></i></div>`).join('')}</div><div class="cols" style="height:auto;margin-top:4px">${ms.map(m=>`<div style="height:auto">${m.slice(5)}</div>`).join('')}</div></div>
- <div class="card"><h2>Top expense categories</h2>${top.map(([c,v])=>`<div>${esc(c)} <span class="num" style="float:right">${R(v)}</span></div><div class="bar"><i style="width:${v/top[0][1]*100}%;background:var(--gold)"></i></div>`).join('')||'<p class="k">No expenses yet.</p>'}</div>
- <div class="card"><h2>Account balances</h2>${S.accounts.map(a=>`<div class="row"><div>${esc(a.name)}</div><div class="a num">${R(bal(a))}</div></div>`).join('')||'<button class="b" onclick="quickCash()">Create a Cash account</button>'}</div>
- <div class="card"><h2>Recent</h2>${S.tx.slice(-6).reverse().map(txRow).join('')||'<p class="k">Nothing recorded yet.</p>'}</div>`}
+   ${paycard}
+  <div class="card"><h2>Top expense categories</h2>${top.map(([c,v])=>`<div>${esc(c)} <span class="num" style="float:right">${R(v)}</span></div><div class="bar"><i style="width:${v/top[0][1]*100}%;background:var(--gold)"></i></div>`).join('')||'<p class="k">No expenses yet.</p>'}</div>
+ <div class="card"><h2>Account balances (investments excluded)</h2>${S.accounts.map(a=>`<div class="row"><div>${esc(a.name)}</div><div class="a num">${R(bal(a))}</div></div>`).join('')||'<button class="b" onclick="quickCash()">Create a Cash account</button>'}</div>
+  <div class="card"><h2>Recent</h2>${L.slice(-6).reverse().map(txRow).join('')||'<p class="k">Nothing recorded yet.</p>'}</div>`}
 function txRow(t){const out=['expense','withdraw','loanrepay','interest','supplier','reimb'].includes(t.type)||(t.type==='reversal'&&false),c=t.type==='income'||t.type==='refund'||t.type==='invest'||t.type==='loanin'?'in':out?'ex':'';
- return `<div class="row"><div class="av ${c}">${c==='in'?'↓':c==='ex'?'↑':'⇄'}</div><div class="d"><b>${esc(t.desc||T[t.type].l)}</b> ${t.status==='reversed'?'<span class="tag r">reversed</span>':''}${OKR(t.rcp)?` <a class="tag" href="${esc(t.rcp)}" download="receipt-${t.id}" rel="noopener">receipt</a>`:''}<br><span class="k">${t.date} · ${T[t.type].l}${t.cat?' · '+esc(t.cat):''} · ${t.src?esc(acc(t.src)):t.pers?'Personal ('+esc(owner(t.pers))+')':''}${t.dst?' → '+esc(acc(t.dst)):''} · ${esc(owner(t.by))} · ${t.id}</span></div><div class="a num ${c}">${R(t.amt)}${t.status==='posted'&&t.type!=='reversal'?`<br><button class="b g sm" onclick="rev('${t.id}')">Reverse</button>`:''}</div></div>`}
+ return `<div class="row"><div class="av ${c}">${c==='in'?'↓':c==='ex'?'↑':'⇄'}</div><div class="d"><b>${esc(t.desc||T[t.type].l)}</b> ${t.status==='reversed'?'<span class="tag r">reversed</span>':''}${OKR(t.rcp)?` <a class="tag" href="${esc(t.rcp)}" download="receipt-${t.id}" rel="noopener">receipt</a>`:''}<br><span class="k">${t.date} · ${T[t.type].l}${t.cat?' · '+esc(t.cat):''}${t.split?' · Cash '+R(t.split.c)+' + UPI '+R(t.split.u):''} · ${t.src?esc(acc(t.src)):t.pers?'Personal ('+esc(owner(t.pers))+')':''}${t.dst?' → '+esc(acc(t.dst)):''} · ${esc(owner(t.by))} · ${t.id}</span></div><div class="a num ${c}">${R(t.amt)}${t.status==='posted'&&t.type!=='reversal'?`<br><button class="b g sm" onclick="rev('${t.id}')">Reverse</button>`:''}</div></div>`}
 function list(){let L=S.tx.slice().reverse().filter(t=>(!F.type||t.type===F.type)&&(!F.acct||t.src===F.acct||t.dst===F.acct)&&(!F.owner||t.by===F.owner)&&(!F.q||(t.desc+t.vendor+t.cat+t.ref+t.id).toLowerCase().includes(F.q.toLowerCase())));
  return `<h2>Activity</h2><div class="card"><input placeholder="Search description, vendor, category" value="${esc(F.q)}" onchange="F.q=this.value;F.n=25;render()">
  <select onchange="F.type=this.value;render()"><option value="">All types</option>${Object.entries(T).map(([k,v])=>`<option value="${k}" ${F.type===k?'selected':''}>${v.l}</option>`)}</select>
@@ -252,67 +270,89 @@ function pick(id,el){let v=el.dataset.v??el.value;if(v==='__n'){v=(prompt('New c
  $('#f_'+id).value=v;document.querySelectorAll('#c_'+id+' .chip').forEach(c=>c.classList.toggle('on',c===el));
  if(id==='src'){const r=$('#ownrow');if(r&&!T[AT].o)r.style.display=v==='personal'?'':'none'}}
 function setD(el,k){const i=$('#f_date');if(k===2){i.style.display='block'}else{i.style.display='none';i.value=ld(k)}document.querySelectorAll('#c_date .chip').forEach(c=>c.classList.toggle('on',c===el))}
+const MRE={Cash:/cash/i,UPI:/upi|online/i,Card:/card/i,'Bank transfer':/bank/i,Cheque:/cheque|check/i,Other:/other|misc/i};
+function methodAcc(m){const re=MRE[m],x=S.accounts.find(a=>a.status!=='closed'&&re&&re.test(a.name+' '+a.type));if(x)return x.id;
+  const a={id:'A'+S.aid,name:m+(m==='UPI'?' account':''),type:m==='UPI'?'UPI account':m,open:0,status:'active',created:today()};
+  if(commit(()=>{S.accounts.push(a);S.aid++;audit('account',a.id,null,{name:a.name,open:0})})){toast('Added '+a.name+' account');return a.id}
+  return (S.accounts.find(y=>y.status!=='closed')||{}).id||''}
+function pickPay(el){const v=el.dataset.v??el.value;document.querySelectorAll('#c_src .chip').forEach(c=>c.classList.toggle('on',c===el));
+  const r=$('#ownrow');if(r&&!T[AT].o)r.style.display=v==='personal'?'':'none';
+  if(v==='personal'){$('#f_src').value='personal';$('#f_method').value='';const sb=$('#splitbox');if(sb)sb.style.display='none';$('#amtbox').style.display='';return}
+  let src,acc2='';if(v==='Cash+UPI'){src=methodAcc('Cash');acc2=methodAcc('UPI')}else src=methodAcc(v);
+  $('#f_src').value=src;$('#f_method').value=v;const sa=$('#f_splitacc');if(sa&&acc2)sa.value=acc2;
+  const sb=$('#splitbox');if(sb)sb.style.display=v==='Cash+UPI'?'':'none';$('#amtbox').style.display=v==='Cash+UPI'?'none':''}
+function pickInto(el){const v=el.dataset.v??el.value;document.querySelectorAll('#c_dst .chip').forEach(c=>c.classList.toggle('on',c===el));
+  let dst,acc2='';if(v==='Cash+UPI'){dst=methodAcc('Cash');acc2=methodAcc('UPI')}else dst=methodAcc(v);
+  $('#f_dst').value=dst;$('#f_method').value=v;const sa=$('#f_splitacc');if(sa&&acc2)sa.value=acc2;
+  const sb=$('#splitbox');if(sb)sb.style.display=v==='Cash+UPI'?'':'none';$('#amtbox').style.display=v==='Cash+UPI'?'none':''}
 function quickCash(){commit(()=>{const a={id:'A'+S.aid++,name:'Cash',type:'Cash',open:0,status:'active',created:today()};S.accounts.push(a);audit('account',a.id,null,{name:'Cash',open:0})});render()}
 function add(){const d=T[AT],L=(S.last||{})[AT]||{},A=S.accounts.filter(a=>a.status!=='closed');
  if(!A.length)return `<h2>Add entry</h2><div class="card"><p>Create an account first (for example Cash or Bank) so money has somewhere to move from or into.</p><button class="b" style="width:100%;margin-top:12px" onclick="quickCash()">Create a Cash account</button><button class="b g" style="width:100%;margin-top:8px" onclick="V='accounts';render()">Add a different account</button></div>`;
  const ch=(id,list,sel,x='')=>`<div class="chips w" id="c_${id}">${list.map(([v,l])=>`<button type="button" class="chip ${v===sel?'on':''}" data-v="${esc(v)}" onclick="pick('${id}',this)">${esc(l)}</button>`).join('')}${x}</div><input type="hidden" id="f_${id}" value="${esc(sel)}">`;
- const al=A.map(a=>[a.id,a.name]),ok=v=>A.some(a=>a.id===v),ss=(d.pers&&L.src==='personal')||ok(L.src)?L.src:A[0].id,ds=ok(L.dst)?L.dst:(A.find(a=>a.id!==ss)||A[0]).id;
+  const al=A.map(a=>[a.id,a.name]),ok=v=>A.some(a=>a.id===v),ss=(d.pers&&L.src==='personal')||ok(L.src)?L.src:A[0].id,ds=ok(L.dst)?L.dst:(A.find(a=>a.id!==ss)||A[0]).id;
+   const payFrom=d.s&&!d.d,payInto=d.d&&!d.s,canPay=['income','expense','supplier','refund'].includes(AT),meth=(payFrom||payInto)?(L.method||'Cash'):'';
+   const mfind=m=>{const re=MRE[m],x=A.find(a=>re&&re.test(a.name+' '+a.type));return x?x.id:A[0].id},payMethods=canPay?METH:METH.filter(m=>m!=='Cash+UPI');
+   const paySel=(d.pers&&L.src==='personal')?'personal':(payFrom?(payMethods.includes(meth)?meth:'Cash'):'Cash'),intoSel=payInto?(payMethods.includes(meth)?meth:'Cash'):'Cash',split=payFrom?paySel==='Cash+UPI':meth==='Cash+UPI';
+   const spa=ok(L.splitacc)?L.splitacc:(mfind('UPI')!==mfind('Cash')?mfind('UPI'):(A.find(a=>a.id!==mfind('Cash'))||A[0]).id),paySrc=paySel==='personal'?'personal':(paySel==='Cash+UPI'?mfind('Cash'):mfind(paySel)),intoDst=intoSel==='Cash+UPI'?mfind('Cash'):mfind(intoSel);
+  const splitBox=`<div id="splitbox" style="display:${split?'':'none'}"><div class="grid"><div><label>Cash amount (₹)</label><input class="amt2" id="f_cashAmt" inputmode="decimal" placeholder="0" oninput="this.value=this.value.replace(/[^0-9.]/g,'')"></div><div><label>UPI / online amount (₹)</label><input class="amt2" id="f_upiAmt" inputmode="decimal" placeholder="0" oninput="this.value=this.value.replace(/[^0-9.]/g,'')"></div></div><label>Second account (UPI / online)</label>${ch('splitacc',al,spa)}</div>`;
  let cat='';
  if(d.c){const base=d.c==='i'?INC:[...Object.values(CATS).flat(),...S.cats],cnt={};S.tx.forEach(t=>{if(t.type===AT&&t.cat)cnt[t.cat]=(cnt[t.cat]||0)+1});
   const top=[...new Set([...Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]),...(d.c==='i'?INC:['Vegetables','Grocery','Meat','Chicken','Gas','Salary','Rent','Electricity'])])].filter(c=>base.includes(c)).slice(0,8);
   cat=`<label>Category</label>${ch('cat',top.map(c=>[c,c]),'',`<button type="button" class="chip" onclick="$('#catall').style.display='block'">More…</button>`)}<select id="catall" style="display:none" onchange="pick('cat',this)"><option value="">All categories…</option>${base.map(c=>`<option>${esc(c)}</option>`).join('')}${d.c==='e'?'<option value="__n">+ New category…</option>':''}</select>`}
  const vs=[...new Set(S.tx.map(t=>t.vendor).filter(Boolean))].slice(-50);
  return `<h2>Add entry</h2><div class="chips">${['expense','income','supplier','transfer','invest','withdraw','loanin','loanrepay','interest','refund','reimb','adjust'].map(k=>`<button class="chip ${k===AT?'on':''}" onclick="goAdd('${k}')">${T[k].l}</button>`).join('')}</div>
- <div class="card"><div class="k" style="text-align:center">Amount</div><div class="amtbox"><span>₹</span><input class="amt" id="f_amount" inputmode="decimal" enterkeyhint="done" placeholder="0" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" onkeydown="if(event.key==='Enter')submitTx(0)"></div></div>
- <div class="card">${cat}${d.s?`<label>${d.d?'From account':'Paid from'}</label>${ch('src',d.pers?[...al,['personal','Paid personally']]:al,ss)}`:'<input type="hidden" id="f_src">'}${d.d?`<label>${d.s?'To account':'Into account'}</label>${ch('dst',al,ds)}`:'<input type="hidden" id="f_dst">'}
+ <div class="card" id="amtbox" style="display:${split?'none':''}"><div class="k" style="text-align:center">Amount</div><div class="amtbox"><span>₹</span><input class="amt" id="f_amount" inputmode="decimal" enterkeyhint="done" placeholder="0" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" onkeydown="if(event.key==='Enter')submitTx(0)"></div></div>
+   <div class="card">${!payFrom&&!payInto?'<input type="hidden" id="f_method" value="">':''}${cat}${payFrom?`<label>Paid from</label><div class="chips w" id="c_src">${[...payMethods.map(m=>[m,m]),...(d.pers?[['personal','Paid personally']]:[])].map(([v,l])=>`<button type="button" class="chip ${v===paySel?'on':''}" data-v="${esc(v)}" onclick="pickPay(this)">${esc(l)}</button>`).join('')}</div><input type="hidden" id="f_src" value="${esc(paySrc)}"><input type="hidden" id="f_method" value="${esc(paySel==='personal'?'':paySel)}">${canPay?splitBox:''}`:d.s?`<label>${d.d?'From account':'Paid from'}</label>${ch('src',d.pers?[...al,['personal','Paid personally']]:al,ss)}`:'<input type="hidden" id="f_src">'}${payInto?`<label>Into account</label><div class="chips w" id="c_dst">${payMethods.map(m=>`<button type="button" class="chip ${m===intoSel?'on':''}" data-v="${m}" onclick="pickInto(this)">${m}</button>`).join('')}</div><input type="hidden" id="f_dst" value="${esc(intoDst)}"><input type="hidden" id="f_method" value="${esc(intoSel)}">${canPay?splitBox:''}`:d.d?`<label>To account</label>${ch('dst',al,ds)}`:'<input type="hidden" id="f_dst">'}
  <div id="ownrow" style="display:${d.o?'':'none'}"><label>${d.o?'Owner':'Paid by owner'}</label>${ch('own',S.owners.map(o=>[o.id,o.name]),U.id)}</div>
  <label>Date</label><div class="chips w" id="c_date"><button type="button" class="chip on" onclick="setD(this,0)">Today</button><button type="button" class="chip" onclick="setD(this,1)">Yesterday</button><button type="button" class="chip" onclick="setD(this,2)">Other date</button></div><input type="date" id="f_date" value="${today()}" style="display:none">
  <label class="chip" style="display:inline-flex;align-items:center;margin-bottom:8px">Add receipt photo or PDF<input type="file" accept="image/*,application/pdf" hidden onchange="rcp(this)"></label>
  <details class="more" ${AT==='adjust'?'open':''}><summary>More details (vendor, note, reference)</summary>
- ${['income','expense','supplier','refund'].includes(AT)?`<label>Vendor / customer</label><input id="f_vendor" list="vl"><datalist id="vl">${vs.map(v=>`<option value="${esc(v)}">`).join('')}</datalist><label>Payment method</label><select id="f_method">${METH.map(m=>`<option ${m===L.method?'selected':''}>${m}</option>`).join('')}</select>`:''}
+  ${canPay?`<label>Vendor / customer</label><input id="f_vendor" list="vl"><datalist id="vl">${vs.map(v=>`<option value="${esc(v)}">`).join('')}</datalist>`:''}
  <label>Description</label><input id="f_desc" placeholder="Leave blank to use the category"><label>Reference no.</label><input id="f_ref"><label>Notes${AT==='adjust'?' (reason required)':''}</label><textarea id="f_notes" rows="2"></textarea></details></div>
  <div class="sticky" style="display:flex;gap:8px"><button class="b g sb" style="flex:1" onclick="submitTx(1)">Save &amp; add another</button><button class="b sb" id="sv" style="flex:1.3" onclick="submitTx(0)">Save ${esc(d.l.toLowerCase())}</button></div>`}
 function rcp(i){const f=i.files[0];if(!f)return;if(f.size>400000){i.value='';return toast('Receipt must be under 400 KB.',1)}
  const r=new FileReader();r.onload=()=>{const h=[...new Uint8Array(r.result.slice(0,4))].map(x=>x.toString(16).padStart(2,'0')).join(''),m=h.startsWith('ffd8ff')?'image/jpeg':h==='89504e47'?'image/png':h==='25504446'?'application/pdf':'';
   if(!m){i.value='';return toast('Only JPEG, PNG or PDF files are accepted.',1)}const u=new FileReader();u.onload=()=>{ADD.rcp=u.result;toast('Receipt attached.')};u.readAsDataURL(new Blob([r.result],{type:m}))};r.readAsArrayBuffer(f)}
-function submitTx(again){if(ADD.busy)return;const g=i=>($('#f_'+i)||{}).value||'';const f={key:ADD.key,type:AT,rcp:ADD.rcp};['amount','date','src','dst','own','cat','vendor','method','desc','ref','notes'].forEach(k=>f[k]=g(k));
- if(!f.desc)f.desc=f.cat;
- if(!P(f.amount)){toast('Enter the amount first.',1);$('#f_amount').focus();return}
- if(T[AT].c&&!f.cat){toast('Tap a category.',1);return}
- const d=dup(f);if(d&&!confirm('Possible duplicate of '+d.id+' ('+d.desc+'). Save anyway?'))return;
- const bs=document.querySelectorAll('.sb');ADD.busy=1;bs.forEach(b=>b.disabled=true);
- if(commit(()=>{addTx(f);(S.last=S.last||{})[AT]={src:f.src,dst:f.dst,cat:f.cat,method:f.method}})){toast('Saved '+R(P(f.amount))+(f.cat?' · '+f.cat:''));ADD={key:uid(),busy:0,rcp:''};if(!again)V='home';render()}
- else{ADD.busy=0;bs.forEach(b=>b.disabled=false)}}
+function submitTx(again){if(ADD.busy)return;const g=i=>($('#f_'+i)||{}).value||'';const f={key:ADD.key,type:AT,rcp:ADD.rcp};['amount','date','src','dst','own','cat','vendor','method','cashAmt','upiAmt','splitacc','desc','ref','notes'].forEach(k=>f[k]=g(k));
+  if(!f.desc)f.desc=f.cat;
+  const split=f.method==='Cash+UPI',sa=split?P(f.cashAmt||'0')+P(f.upiAmt||'0'):P(f.amount);
+  if(!sa){toast(split?'Enter cash and/or UPI amount.':'Enter the amount first.',1);$(split?'#f_cashAmt':'#f_amount').focus();return}
+  if(T[AT].c&&!f.cat){toast('Tap a category.',1);return}
+  const d=dup(split?{...f,amount:(sa/100).toFixed(2)}:f);if(d&&!confirm('Possible duplicate of '+d.id+' ('+d.desc+'). Save anyway?'))return;
+  const bs=document.querySelectorAll('.sb');ADD.busy=1;bs.forEach(b=>b.disabled=true);
+  if(commit(()=>{addTx(f);(S.last=S.last||{})[AT]={src:f.src,dst:f.dst,cat:f.cat,method:f.method,splitacc:f.splitacc}})){toast('Saved '+R(sa)+(f.cat?' · '+f.cat:''));ADD={key:uid(),busy:0,rcp:''};if(!again)V='home';render()}
+  else{ADD.busy=0;bs.forEach(b=>b.disabled=false)}}
 function accounts(){return `<h2>Accounts</h2>${S.accounts.map(a=>`<div class="card"><div class="row" style="border:0"><div><b>${esc(a.name)}</b><br><span class="k">${a.type} · opened ${R(a.open)}</span></div><div class="a num">${R(bal(a))}<br><button class="b g sm" onclick="recon('${a.id}')">Reconcile</button></div></div></div>`).join('')}
- <div class="card"><h2>New account</h2><label>Name</label><input id="an"><label>Type</label><select id="at">${['Cash','Petty cash','Bank account','UPI account','Wallet','Credit card','Other'].map(x=>`<option>${x}</option>`)}</select><label>Opening balance (₹)</label><input id="ao" inputmode="decimal" value="0"><button class="b" onclick="newAcc()">Create account</button><p class="k">Balances come only from the opening balance plus posted entries; they can't be edited.</p></div>`}
+ <div class="card"><h2>New account</h2><label>Name</label><input id="an"><label>Type</label><select id="at">${['Cash','Petty cash','Bank account','UPI account','Wallet','Credit card','Other'].map(x=>`<option>${x}</option>`)}</select><label>Opening balance (₹)</label><input id="ao" inputmode="decimal" value="0"><button class="b" onclick="newAcc()">Create account</button><p class="k">Balances come only from the opening balance plus posted entries; they can't be edited. Owner investment and withdrawals are excluded from these balances.</p></div>`}
 function newAcc(){const n=$('#an').value.trim();if(!n)return alert('Name required');const o=$('#ao').value==='0'?0:P($('#ao').value);
  commit(()=>{const a={id:'A'+S.aid++,name:n,type:$('#at').value,open:o,status:'active',created:today()};S.accounts.push(a);audit('account',a.id,null,{name:n,open:o})});render()}
-function recon(id){const a=S.accounts.find(x=>x.id===id),sys=bal(a),v=prompt('Actual balance in '+a.name+' (₹). System shows '+R(sys));if(v===null)return;const act=v==='0'?0:P(v);
+function recon(id){const a=S.accounts.find(x=>x.id===id),sys=rawBal(a),v=prompt('Actual balance in '+a.name+' (₹). System shows '+R(sys));if(v===null)return;const act=v==='0'?0:P(v);
  const diff=act-sys;let why='';if(diff){why=prompt('Difference '+R(diff)+'. Reason for adjustment (leave blank to record without adjusting):')||''}
  commit(()=>{S.recon.push({ts:new Date().toISOString(),acc:id,sys,act,diff,by:U.id,notes:why});audit('reconcile',id,{sys},{act,diff},why);
   if(diff&&why){const t=addTx({key:uid(),type:'adjust',amount:(Math.abs(diff)/100).toFixed(2),date:today(),dst:id,notes:why,desc:'Reconciliation adjustment'});if(diff<0){t.led=[[id,diff]]}else t.led=[[id,diff]]}});render()}
 function reports(){const fr=F.from||today().slice(0,8)+'01',to=F.to||today(),L=live().filter(t=>t.date>=fr&&t.date<=to);
  const I=sum(L,inc),E=sum(L,exp),by={};L.forEach(t=>{if(exp(t)&&t.cat)by[t.cat]=(by[t.cat]||0)+exp(t)});
- const ent=S.tx.filter(t=>t.date>=fr&&t.date<=to).flatMap(t=>t.led),rec=ent.filter(l=>l[1]>0).reduce((s,l)=>s+l[1],0),sp=-ent.filter(l=>l[1]<0).reduce((s,l)=>s+l[1],0);
- const open=sum(S.accounts,a=>a.open)+sum(S.tx.filter(t=>t.date<fr),t=>sum(t.led,l=>l[1]));
+   const flow=t=>!['invest','withdraw','transfer'].includes(t.type)&&!(t.type==='reversal'&&['invest','withdraw','transfer'].includes((S.tx.find(x=>x.id===t.rev)||{}).type));
+   const ent=S.tx.filter(t=>t.date>=fr&&t.date<=to&&flow(t)).flatMap(t=>t.led),rec=ent.filter(l=>l[1]>0).reduce((s,l)=>s+l[1],0),out=-ent.filter(l=>l[1]<0).reduce((s,l)=>s+l[1],0);
+  const open=sum(S.accounts,a=>a.open)+sum(S.tx.filter(t=>t.date<fr&&flow(t)),t=>sum(t.led,l=>l[1]));
  const row=(k,v,c='')=>`<div class="row"><div>${k}</div><div class="a num ${c}">${R(v)}</div></div>`;
  return `<h2>Reports</h2><div class="card"><label>From</label><input type="date" value="${fr}" onchange="F.from=this.value;render()"><label>To</label><input type="date" value="${to}" onchange="F.to=this.value;render()"><button class="b g" onclick="csv('${fr}','${to}')">Export CSV</button></div>
- <div class="card"><h2>Result</h2>${row('Income',I,'in')}${row('Expenses (net of refunds)',E,'ex')}${row('Net result',I-E)}${row('Owner investments',sum(L.filter(t=>t.type==='invest'),t=>t.amt))}${row('Owner withdrawals',sum(L.filter(t=>t.type==='withdraw'),t=>t.amt))}${row('Loans received',sum(L.filter(t=>t.type==='loanin'),t=>t.amt))}${row('Loan principal repaid',sum(L.filter(t=>t.type==='loanrepay'),t=>t.amt))}${row('Loan interest',sum(L.filter(t=>t.type==='interest'),t=>t.amt))}</div>
- <div class="card"><h2>Cash flow</h2>${row('Opening balance',open)}${row('Money received',rec,'in')}${row('Money out',-sp,'ex')}${row('Closing balance',open+rec-sp)}<p class="k">Includes transfers (they net to zero overall).</p></div>
- <div class="card"><h2>Owners</h2>${S.owners.map(o=>row(o.name+' — net contributed',sum(live().filter(t=>t.own===o.id&&t.type==='invest'),t=>t.amt)-sum(live().filter(t=>t.own===o.id&&t.type==='withdraw'),t=>t.amt))+row(o.name+' — owed (unreimbursed)',sum(live().filter(t=>t.pers===o.id),t=>t.amt)-sum(live().filter(t=>t.own===o.id&&t.type==='reimb'),t=>t.amt))).join('')}</div>
+ <div class="card"><h2>Result</h2>${row('Income',I,'in')}${row('Expenses (net of refunds)',E,'ex')}${row('Net result',I-E)}${row('Loans received',sum(L.filter(t=>t.type==='loanin'),t=>t.amt))}${row('Loan principal repaid',sum(L.filter(t=>t.type==='loanrepay'),t=>t.amt))}${row('Loan interest',sum(L.filter(t=>t.type==='interest'),t=>t.amt))}</div>
+ <div class="card"><h2>Cash flow</h2>${row('Opening balance',open)}${row('Money received',rec,'in')}${row('Money out',out,'ex')}${row('Closing balance',open+rec-out)}<p class="k">Transfers between your own accounts, owner investment and withdrawals are not counted as income or spending.</p></div>
+  <div class="card"><h2>Owed to owners</h2>${S.owners.map(o=>row(o.name+' — owed (unreimbursed)',sum(live().filter(t=>t.pers===o.id),t=>t.amt)-sum(live().filter(t=>t.own===o.id&&t.type==='reimb'),t=>t.amt))).join('')}</div>
  <div class="card"><h2>Budgets (this period)</h2>${Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([c,v])=>{const b=S.budgets[c],p=b?Math.round(v/b*100):0;return `<div>${esc(c)} <span class="num" style="float:right">${R(v)}${b?' / '+R(b)+' · '+p+'%':''}</span></div><div class="bar"><i style="width:${Math.min(100,b?p:0)}%;background:${p>=100?'var(--ex)':p>=90?'#d08a3c':p>=75?'var(--gold)':'var(--in)'}"></i></div>`}).join('')||'<p class="k">No expenses in this period.</p>'}<button class="b g sm" onclick="budget()">Set a monthly budget</button></div>`}
 function budget(){const c=prompt('Category (exact name):');if(!c)return;const v=P(prompt('Monthly budget (₹):')||'');if(!v)return;commit(()=>{S.budgets[c]=v;audit('budget',c,null,{v})});render()}
-function csv(fr,to){if(!confirm('CSV exports are not encrypted. Store the file safely. Continue?'))return;const q=s=>'"'+String(s).replace(/"/g,'""').replace(/^([=+\-@])/,"'$1")+'"';const rows=[['ID','Date','Type','Amount','Category','Vendor','Description','Source','Destination','Recorded by','Status','Reference']];
- S.tx.filter(t=>t.date>=fr&&t.date<=to).forEach(t=>rows.push([t.id,t.date,t.type,(t.amt/100).toFixed(2),t.cat,t.vendor,t.desc,acc(t.src),acc(t.dst),owner(t.by),t.status,t.ref]));
+function csv(fr,to){if(!confirm('CSV exports are not encrypted. Store the file safely. Continue?'))return;const q=s=>'"'+String(s).replace(/"/g,'""').replace(/^([=+\-@])/,"'$1")+'"';const rows=[['ID','Date','Type','Amount','Category','Vendor','Description','Source','Destination','Recorded by','Status','Reference','Method','Cash part','UPI part']];
+ S.tx.filter(t=>t.date>=fr&&t.date<=to).forEach(t=>rows.push([t.id,t.date,t.type,(t.amt/100).toFixed(2),t.cat,t.vendor,t.desc,acc(t.src),acc(t.dst),owner(t.by),t.status,t.ref,t.method||'',t.split?(t.split.c/100).toFixed(2):'',t.split?(t.split.u/100).toFixed(2):'']));
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv'}));a.download='ledger-'+fr+'_'+to+'.csv';a.click()}
 let AF={q:'',a:'',o:'',from:'',to:'',n:30};
 const dk=ts=>{const d=new Date(ts);return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 function jr(t){const A=id=>acc(id),c=t.cat||'Uncategorised',o=t.own?owner(t.own):'',p=t.pers?owner(t.pers):'',m=t.amt;let L;
  if(t.type==='reversal'){const x=S.tx.find(y=>y.id===t.rev);return x?jr(x).map(l=>[l[0]==='Dr'?'Cr':'Dr',l[1],l[2]]):[]}
- switch(t.type){case'income':L=[['Dr',A(t.dst)],['Cr','Income – '+c]];break;
- case'expense':case'supplier':L=[['Dr','Expense – '+c],['Cr',t.pers?'Payable to '+p:A(t.src)]];break;
- case'interest':L=[['Dr','Interest expense'],['Cr',A(t.src)]];break;
- case'refund':L=[['Dr',A(t.dst)],['Cr','Expense – '+c]];break;
+  switch(t.type){case'income':L=t.split?[['Dr',A(t.dst),t.split.c],['Dr',A(t.splitacc),t.split.u],['Cr','Income – '+c,m]]:[['Dr',A(t.dst)],['Cr','Income – '+c]];break;
+  case'expense':case'supplier':L=t.split?[['Dr','Expense – '+c,m],['Cr',A(t.src),t.split.c],['Cr',A(t.splitacc),t.split.u]]:[['Dr','Expense – '+c],['Cr',t.pers?'Payable to '+p:A(t.src)]];break;
+  case'interest':L=[['Dr','Interest expense'],['Cr',A(t.src)]];break;
+  case'refund':L=t.split?[['Dr',A(t.dst),t.split.c],['Dr',A(t.splitacc),t.split.u],['Cr','Expense – '+c,m]]:[['Dr',A(t.dst)],['Cr','Expense – '+c]];break;
  case'invest':L=[['Dr',A(t.dst)],['Cr','Owner capital – '+o]];break;
  case'withdraw':L=[['Dr','Owner drawings – '+o],['Cr',A(t.src)]];break;
  case'loanin':L=[['Dr',A(t.dst)],['Cr','Loan payable']];break;
@@ -321,11 +361,11 @@ function jr(t){const A=id=>acc(id),c=t.cat||'Uncategorised',o=t.own?owner(t.own)
  case'reimb':L=[['Dr','Payable to '+o],['Cr',A(t.src)]];break;
  case'adjust':{const l=t.led[0]||[t.dst,0],a=A(l[0]);L=l[1]>=0?[['Dr',a],['Cr','Adjustment']]:[['Dr','Adjustment'],['Cr',a]]}break;
  default:L=[]}
- return L.map(l=>[l[0],l[1],m])}
+  return L.map(l=>[l[0],l[1],l[2]===undefined?m:l[2]])}
 const jt=L=>L.length?`<div style="overflow-x:auto"><table class="jt"><tr><th>Journal entry</th><th>Debit</th><th>Credit</th></tr>${L.map(([s,n,m])=>`<tr><td>${esc(n)}</td><td class="num">${s==='Dr'?R(m):''}</td><td class="num">${s==='Cr'?R(m):''}</td></tr>`).join('')}</table></div>`:'';
 function ah(a){const t=S.tx.find(x=>x.id===a.id),n=a.next||{},pv=a.prev||{},up={income:1,invest:1,loanin:1,refund:1};
  if(a.a==='create'){const ty=t?t.type:n.type,l=(T[ty]||{}).l||'Entry',d=[];
-  if(t){d.push('Transaction date: '+t.date+(t.ref?' · Reference '+t.ref:''));d.push('Account: '+(t.src?acc(t.src):t.pers?'Paid personally by '+owner(t.pers):'')+(t.dst?(t.src?' → ':'')+acc(t.dst):''));if(t.cat)d.push('Category: '+t.cat);if(t.vendor)d.push('Vendor / customer: '+t.vendor);if(t.desc&&t.desc!==t.cat)d.push('Description: '+t.desc);if(t.status==='reversed')d.push('Status now: REVERSED')}
+  if(t){d.push('Transaction date: '+t.date+(t.ref?' · Reference '+t.ref:''));d.push('Account: '+(t.src?acc(t.src):t.pers?'Paid personally by '+owner(t.pers):'')+(t.dst?(t.src?' → ':'')+acc(t.dst):''));if(t.method)d.push('Payment method: '+t.method+(t.split?' (Cash '+R(t.split.c)+' + UPI '+R(t.split.u)+')':''));if(t.cat)d.push('Category: '+t.cat);if(t.vendor)d.push('Vendor / customer: '+t.vendor);if(t.desc&&t.desc!==t.cat)d.push('Description: '+t.desc);if(t.status==='reversed')d.push('Status now: REVERSED')}
   return{t:l+' recorded',amt:t?t.amt:n.amt,k:up[ty]?'in':['transfer','adjust'].includes(ty)?'':'ex',ic:up[ty]?'↓':ty==='transfer'?'⇄':ty==='adjust'?'≈':'↑',g:'tx',d,j:t?jr(t):[]}}
  if(a.a==='reverse'){const rt=S.tx.find(x=>x.id===n.by);return{t:'Reversed '+a.id+(t?' ('+T[t.type].l+')':''),amt:t?t.amt:null,k:'rv',ic:'↺',g:'rev',d:['The original entry stays in the books, marked as reversed.','Offsetting entry: '+(n.by||'—')],j:rt?jr(rt):[]}}
  if(a.a==='reconcile')return{t:'Reconciled '+acc(a.id),amt:n.diff,k:'',ic:'≈',g:'acct',d:['System balance: '+R(pv.sys||0),'Actual balance: '+R(n.act||0),'Difference: '+R(n.diff||0)+(n.diff?'':' (matched)')],j:[]};
@@ -358,7 +398,8 @@ async function verify(){const o=[],ck=(ok,m)=>o.push([ok,m]);let p='',bad=0;
  ck(S.tx.every(t=>t.type!=='transfer'||sum(t.led,l=>l[1])===0),'Every transfer nets to zero');
  ck(S.tx.every(t=>t.type!=='reversal'||(S.tx.find(x=>x.id===t.rev)||{}).status==='reversed'),'Every reversal links to a reversed entry');
  ck(S.tx.every(t=>t.led.every(l=>S.accounts.some(a=>a.id===l[0]))),'No ledger line points to a missing account');
- ck(sum(S.accounts,bal)===sum(S.accounts,a=>a.open)+sum(S.tx,t=>sum(t.led,l=>l[1])),'Account balances equal openings plus ledger');
+  ck(sum(S.accounts,rawBal)===sum(S.accounts,a=>a.open)+sum(S.tx,t=>sum(t.led,l=>l[1])),'Account balances equal openings plus ledger');
+  ck(S.tx.every(t=>!t.split||t.split.c+t.split.u===t.amt),'Split payments add up to their total');
  INT=o;render();toast(o.every(x=>x[0])?'All integrity checks passed.':'Integrity problems found.',!o.every(x=>x[0]))}
 function more(){const used=new Blob([localStorage.getItem(K)||'']).size,r=(k,v)=>`<div class="row"><div class="d">${k}</div><div class="a" style="font-weight:500">${v}</div></div>`;
  return `<h2>More</h2><div class="card menu">${[['accounts','Accounts'],['audit','Audit history']].map(([k,l])=>`<button onclick="V='${k}';render()">${l}<span>›</span></button>`).join('')}</div>
