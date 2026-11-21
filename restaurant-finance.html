@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#102B24">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Restaurant Ledger</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{--p:#173C32;--dg:#102B24;--bg:#F7F5EF;--s:#fff;--sage:#A9B8A7;--gold:#B99555;--tx:#202620;--mu:#737B75;--ex:#B45C54;--in:#43866B;--ln:#ece8dc;--sh:0 1px 2px rgba(16,43,36,.05),0 10px 28px -14px rgba(16,43,36,.18)}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{max-width:100%;overflow-x:hidden}
+body{font:15px/1.5 'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--tx);padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+h1,h2,.big{font-family:'DM Serif Display',Georgia,serif;font-weight:400}
+h2{font-size:24px;margin:2px 0 14px;color:var(--dg)}.card h2{font-size:18px;margin:0 0 10px}
+.num{font-variant-numeric:tabular-nums}
+header{position:sticky;top:0;z-index:6;background:var(--dg);color:#fff;border-bottom:2px solid var(--gold);padding-top:env(safe-area-inset-top,0px)}
+.hw{max-width:1040px;margin:auto;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+header h1{font-size:21px}.ub{display:flex;align-items:center;gap:10px}
+.who{width:34px;height:34px;border-radius:50%;background:var(--gold);color:var(--dg);display:grid;place-items:center;font-weight:700}
+.dn,.so{display:none}
+main{padding:18px 16px;max-width:1040px;margin:auto}
+.card{background:var(--s);border:1px solid var(--ln);border-radius:18px;padding:16px;margin-bottom:12px;box-shadow:var(--sh)}
+.hero{background:var(--p);color:#fff;border:0;padding:24px 20px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-34px;top:-34px;width:150px;height:150px;border-radius:50%;border:26px solid rgba(185,149,85,.2)}
+.hero .big{font-size:40px;line-height:1.15;margin-top:4px}.hero small{color:var(--sage)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid .card{margin:0}
+.k{color:var(--mu);font-size:12px}.v{font-size:20px;font-weight:700;margin-top:2px}
+.in{color:var(--in)}.ex{color:var(--ex)}
+.qa{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.qa button{background:#fff;border:1px solid var(--ln);border-radius:16px;padding:10px 2px;font:inherit;font-size:12px;color:var(--tx);display:flex;flex-direction:column;align-items:center;gap:6px;box-shadow:var(--sh);min-height:72px;cursor:pointer}
+.qa b{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#eef1ec;color:var(--p);font-size:16px}
+.bn{position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom,0px));background:#fff;border:1px solid var(--ln);border-radius:24px;box-shadow:0 12px 32px -8px rgba(16,43,36,.3);display:flex;align-items:center;z-index:7;padding:6px}
+.bn button{flex:1;border:0;background:none;color:var(--mu);font:inherit;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;min-height:52px;border-radius:14px}
+.bn button.on{color:var(--p);font-weight:700}.bn button.on svg{stroke:var(--gold)}
+.bn .plus{flex:none;width:58px;height:58px;margin:-26px 6px 0;border-radius:50%;background:var(--p);color:#fff;border:4px solid var(--bg);box-shadow:0 8px 18px -4px rgba(16,43,36,.5);justify-content:center;padding:0}
+.bn .plus svg{stroke:#fff!important}
+button.b{background:var(--p);color:#fff;border:0;border-radius:14px;padding:13px 16px;font:inherit;font-weight:700;min-height:50px;cursor:pointer}
+button.b.g{background:none;color:var(--p);border:1px solid var(--sage)}button.sm{min-height:36px;padding:6px 12px;font-size:13px;border-radius:10px}
+button:disabled{opacity:.5}
+input,select,textarea{width:100%;font:inherit;padding:12px 14px;border:1px solid #ddd9cb;border-radius:12px;background:#FBFAF6;margin:4px 0 12px;min-height:48px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--gold);outline-offset:0;background:#fff}
+label{font-size:13px;color:var(--mu);font-weight:500}
+.chips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 14px;padding:2px 16px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--sage);background:#fff;border-radius:999px;padding:9px 14px;font:inherit;font-size:13px;min-height:40px;color:var(--tx)}
+.chip.on{background:var(--p);color:#fff;border-color:var(--p)}
+.row{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--ln)}.row:last-child{border:0}
+.row .d{flex:1;min-width:0;overflow-wrap:anywhere}.row .a{text-align:right;white-space:nowrap;font-weight:700}
+.av{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;background:#eef1ec;color:var(--p);font-weight:700}
+.av.in{background:#e3f0ea;color:var(--in)}.av.ex{background:#f6e4e2;color:var(--ex)}
+.tag{font-size:11px;background:#eef1ec;border-radius:6px;padding:2px 6px;color:var(--p)}.tag.r{background:#f3dddb;color:var(--ex)}
+.bar{height:8px;background:#ece9df;border-radius:5px;overflow:hidden;margin:4px 0 10px}.bar i{display:block;height:100%;background:var(--in)}
+.cols{display:flex;align-items:flex-end;gap:8px;height:110px}.cols div{flex:1;display:flex;gap:2px;align-items:flex-end;height:100%;font-size:10px;color:var(--mu)}
+.cols i{flex:1;border-radius:4px 4px 0 0;min-height:2px}
+.warn{background:#fbf1de;border:1px solid var(--gold);border-radius:12px;padding:10px;margin-bottom:10px;font-size:13px}
+.auth{width:calc(100% - 32px);max-width:400px;margin:8vh auto;padding:28px 22px;background:#fff;border-radius:22px;box-shadow:var(--sh);border-top:4px solid var(--gold)}
+.auth h1{font-size:30px;color:var(--p);margin-bottom:6px}
+.menu button{display:flex;justify-content:space-between;width:100%;border:0;background:none;font:inherit;padding:14px 2px;border-bottom:1px solid var(--ln);min-height:52px;color:var(--tx)}.menu button:last-child{border:0}
+.sticky{position:sticky;bottom:92px;background:var(--bg);padding:8px 0}
+@media(min-width:860px){
+body{padding-bottom:48px}.bn{display:none}
+.dn{display:flex;gap:2px;background:rgba(255,255,255,.08);border-radius:999px;padding:4px}
+.dn button{border:0;background:none;color:var(--sage);font:inherit;font-size:14px;padding:8px 15px;border-radius:999px;cursor:pointer}
+.dn button:hover{color:#fff}.dn button.on{background:var(--gold);color:var(--dg);font-weight:700}
+.so{display:inline-block;color:#fff;border-color:rgba(169,184,167,.5)}
+main{padding:30px 24px}.grid{grid-template-columns:repeat(4,1fr)}.qa{grid-template-columns:repeat(7,1fr)}
+.sticky{bottom:0}.chips{margin:0 0 14px;padding:2px 0;flex-wrap:wrap;overflow:visible}
+.hero .big{font-size:52px}}
+#toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--dg);color:#fff;padding:12px 18px;border-radius:14px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:20;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}#toast.bad{background:var(--ex)}
+dialog{border:0;border-radius:20px;padding:22px;width:min(92vw,380px);box-shadow:0 24px 60px -10px rgba(16,43,36,.5)}dialog::backdrop{background:rgba(16,43,36,.6)}
+.amtbox{display:flex;align-items:center;justify-content:center;gap:6px}.amtbox span{font:34px 'DM Serif Display',serif;color:var(--mu)}
+input.amt{font:50px 'DM Serif Display',serif;text-align:center;border:0;background:transparent;width:70%;margin:0;min-height:68px;padding:0;color:var(--dg)}input.amt:focus{outline:0;background:transparent}
+.chips.w{flex-wrap:wrap;overflow:visible;margin:4px 0 14px;padding:0}label.chip{cursor:pointer}
+details.more{margin:6px 0 4px}details.more summary{cursor:pointer;color:var(--p);font-weight:700;padding:10px 0;min-height:44px}
+.lockbtn{display:flex;align-items:center;justify-content:center;gap:6px;width:36px;height:36px;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(169,184,167,.3);border-radius:999px;font:inherit;font-size:13px;cursor:pointer;padding:0}
+.lockbtn svg{width:16px;height:16px}.lockbtn span{display:none}.lockbtn:hover{background:rgba(255,255,255,.2)}
+body.gated{padding:0;background:var(--dg)}
+.gate{min-height:100dvh;display:flex;flex-direction:column}.gw{display:flex;flex-direction:column;flex:1}
+.gb{position:relative;overflow:hidden;color:#fff;text-align:center;padding:calc(34px + env(safe-area-inset-top,0px)) 24px 56px}
+.gb:before{content:"";position:absolute;left:50%;top:-130px;width:440px;height:440px;margin-left:-220px;border-radius:50%;background:repeating-radial-gradient(circle,transparent 0 22px,rgba(185,149,85,.16) 22px 23px);pointer-events:none}
+.gb>*{position:relative}.gb h1{font-size:30px;margin:12px 0 4px}.gb p{color:var(--sage);font-size:14px}
+.gb ul{display:none;list-style:none;padding:0;margin-top:40px;text-align:left}.gb li{display:flex;gap:10px;align-items:center;color:#dfe6dc;font-size:14px;padding:7px 0}.gb li:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gold)}
+.gf{flex:1;background:var(--bg);border-radius:28px 28px 0 0;margin-top:-28px;padding:30px 22px calc(28px + env(safe-area-inset-bottom,0px));position:relative}
+.gf>div{max-width:400px;margin:auto}.gf h2{font-size:30px;margin-bottom:2px}
+.ocs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 18px}
+.oc{border:1.5px solid var(--ln);background:#fff;border-radius:18px;padding:14px 8px;font:inherit;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;color:var(--tx);transition:border-color .2s,box-shadow .2s;min-height:98px;overflow-wrap:anywhere}
+.oc .av2{width:44px;height:44px;border-radius:50%;background:#eef1ec;color:var(--p);display:grid;place-items:center;font:22px 'DM Serif Display',serif;transition:.2s}
+.oc.on{border-color:var(--gold);box-shadow:0 0 0 4px rgba(185,149,85,.18)}.oc.on .av2{background:var(--p);color:#fff}
+.pw{position:relative}.pw input{padding-right:74px}.pw .eye{position:absolute;right:4px;top:6px;border:0;background:none;color:var(--p);font:inherit;font-weight:700;font-size:13px;min-height:44px;padding:0 14px;cursor:pointer}
+.go{width:100%;font-size:16px;min-height:54px;margin-top:4px}
+.lk{display:flex;gap:8px;align-items:center;justify-content:center;color:var(--mu);font-size:12px;margin-top:20px;text-align:center}.lk svg{width:14px;height:14px;flex:none}
+.gf a{color:var(--p);font-size:14px;font-weight:700;text-decoration:none}
+@media(min-width:860px){
+body.gated{background:var(--bg)}.gate{align-items:center;justify-content:center;padding:32px}
+.gw{flex-direction:row;flex:none;width:min(940px,100%);min-height:600px;border-radius:30px;overflow:hidden;box-shadow:0 34px 90px -34px rgba(16,43,36,.55)}
+.gb{flex:0 0 42%;background:var(--dg);text-align:left;padding:52px 44px;display:flex;flex-direction:column;justify-content:center}.gb:before{left:-120px;top:auto;bottom:-170px;margin:0}.gb ul{display:block}.gb h1{font-size:36px}
+.gf{margin:0;border-radius:0;display:flex;align-items:center;padding:44px}.gf>div{width:100%}}
+.ast{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}.ast .card{margin:0}
+.dh{font:20px 'DM Serif Display',serif;color:var(--dg);margin:20px 0 8px}
+details.ae{background:#fff;border:1px solid var(--ln);border-radius:16px;margin-bottom:8px;box-shadow:var(--sh)}
+details.ae summary{list-style:none;display:flex;gap:12px;align-items:center;padding:12px 14px;cursor:pointer;min-height:62px}details.ae summary::-webkit-details-marker{display:none}
+details.ae[open] summary{border-bottom:1px solid var(--ln)}
+.at{flex:1;min-width:0;display:flex;flex-direction:column;overflow-wrap:anywhere}.aa{font-weight:700;white-space:nowrap}
+.ai{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;background:#eef1ec;color:var(--p);font-weight:700}
+.ai.in{background:#e3f0ea;color:var(--in)}.ai.ex{background:#f6e4e2;color:var(--ex)}.ai.rv{background:#f6ecd9;color:#8a6a2b}
+.ab{padding:12px 16px 14px;font-size:14px;display:grid;gap:5px}.why{background:#fbf1de;border-radius:10px;padding:8px 10px}
+.jt{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0}.jt th{text-align:left;color:var(--mu);font-weight:500;border-bottom:1px solid var(--ln);padding:4px 0}
+.jt th:nth-child(n+2),.jt td:nth-child(n+2){text-align:right}.jt td{padding:5px 0;border-bottom:1px dashed var(--ln)}
+.fg{display:grid;grid-template-columns:1fr;gap:0 10px}
+@media(min-width:860px){.ast{grid-template-columns:repeat(4,1fr)}.fg{grid-template-columns:repeat(3,1fr)}}
+@media print{header,.bn,.dn,.noprint,#toast{display:none!important}body,body.gated{padding:0;background:#fff}.card,details.ae{box-shadow:none}}
+.stack{display:grid;gap:10px}.tag.ok{background:#e3f0ea;color:var(--in)}
+@media(min-width:860px){#toast{bottom:32px}}
+</style></head><body><div id="app"></div>
+<script>
+const K='rfm_v2',IT=600000,$=s=>document.querySelector(s),enc=new TextEncoder(),dec=new TextDecoder();
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const R=n=>(n<0?'-':'')+'₹'+(Math.abs(n)/100).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const P=v=>{v=String(v).trim();if(!/^\d{1,12}(\.\d{1,2})?$/.test(v))return 0;const[a,b='']=v.split('.');return+a*100+ +(b+'00').slice(0,2)};
+const ld=k=>{const d=new Date();d.setDate(d.getDate()-k);return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)},today=()=>ld(0);
+const DEF={owners:[],accounts:[],tx:[],audit:[],budgets:{},cats:[],recon:[],seq:1,aid:1,idem:{}};
+let VT=JSON.parse(localStorage.getItem(K)||'null'),S,DEK=null,DEKraw=null,Q=Promise.resolve(),INT=[];
+const blank=()=>{S=Object.assign({},DEF,{owners:VT?VT.owners.map(o=>({id:o.id,name:o.name})):[]})};blank();
+const b64=b=>{b=new Uint8Array(b);let s='';for(let i=0;i<b.length;i+=8192)s+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return btoa(s)},ub=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const kdf=async(pw,salt,it)=>crypto.subtle.deriveKey({name:'PBKDF2',salt:ub(salt),iterations:it,hash:'SHA-256'},await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveKey']),{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+const seal=async(k,by)=>{const iv=crypto.getRandomValues(new Uint8Array(12));return{iv:b64(iv),ct:b64(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,by))}};
+const open=async(k,o)=>new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:ub(o.iv)},k,ub(o.ct)));
+const sha=async m=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(m)))].map(x=>x.toString(16).padStart(2,'0')).join('');
+const AH=a=>JSON.stringify([a.ts,a.by,a.a,a.id,a.prev,a.next,a.why]);
+// encrypted, serialised persistence; audit entries are hash-chained just before sealing
+const save=()=>{if(!DEK)return 1;Q=Q.then(async()=>{let p='';for(const a of S.audit){if(!a.h)a.h=await sha(p+AH(a));p=a.h}VT.data=await seal(DEK,enc.encode(JSON.stringify(S)));localStorage.setItem(K,JSON.stringify(VT))}).catch(e=>toast('SAVE FAILED ('+e.message+'). Download an encrypted backup now.',1));return 1};
+// all-or-nothing in-memory write: rolls back if validation throws
+const commit=fn=>{const snap=JSON.stringify(S);try{fn();if(save())return 1}catch(e){toast(e.message,1)}S=JSON.parse(snap);return 0};
+const toast=(m,bad)=>{let t=$('#toast');if(!t){t=document.createElement('div');t.id='toast';t.setAttribute('role','status');document.body.appendChild(t)}t.textContent=m;t.className=bad?'bad show':'show';clearTimeout(t._t);t._t=setTimeout(()=>t.className='',4000)};
+const ask=(title,fields,o={})=>new Promise(r=>{const d=document.createElement('dialog');
+ d.innerHTML=`<h2>${esc(title)}</h2>${o.note?`<p class="k" style="margin-bottom:10px">${esc(o.note)}</p>`:''}${fields.map((f,i)=>{const[l,t]=Array.isArray(f)?f:[f,'password'];return `<label>${esc(l)}</label><input type="${t}" autocomplete="off" id="q${i}">`}).join('')}<div style="display:flex;gap:8px;margin-top:6px"><button type="button" class="b g" style="flex:1" data-r="x">Cancel</button><button type="button" class="b" style="flex:1" data-r="ok">${esc(o.ok||'Confirm')}</button></div>${o.extra||''}`;
+ d.addEventListener('click',e=>{const t=e.target.closest('[data-r]');if(t)d.close(t.dataset.r)});
+ d.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT')d.close('ok')});
+ d.addEventListener('close',()=>{const rv=d.returnValue,v=rv==='ok'?fields.map((_,i)=>d.querySelector('#q'+i).value):rv==='erase'?'erase':null;d.remove();r(v)});
+ document.body.appendChild(d);d.showModal();const f=d.querySelector('input');if(f)f.focus()});
+const genRec=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',b=crypto.getRandomValues(new Uint8Array(20));return [...b].map(x=>a[x%32]).join('').match(/.{4}/g).join('-')},normRec=c=>String(c).toUpperCase().replace(/[^A-Z0-9]/g,'');
+const OKR=r=>/^data:(image\/(jpeg|png)|application\/pdf);base64,[A-Za-z0-9+\/=]+$/.test(r||'');
+const uid=()=>crypto.randomUUID();
+const CATS={Food:['Vegetables','Fruits','Meat','Chicken','Seafood','Dairy','Grocery','Spices','Oil','Bakery','Beverages'],Operations:['Rent','Electricity','Water','Gas','Internet','Repairs','Cleaning','Maintenance','Pest control'],Staff:['Salary','Wages','Staff meals','Uniforms','Transportation'],Marketing:['Social media','Advertising','Promotions','Printing'],Admin:['Licenses','Software','Accounting','Bank charges','Office expenses'],Equipment:['Kitchen equipment','Furniture','Appliances','Renovation'],Other:['Miscellaneous']};
+const INC=['Restaurant sales','Online orders','Catering','Delivery','Event sales','Other income'];
+const METH=['Cash','UPI','Card','Bank transfer','Cheque','Other'];
+// s=needs source, d=needs destination, o=owner, c=category kind
+const T={income:{l:'Income',d:1,c:'i'},expense:{l:'Expense',s:1,c:'e',pers:1},invest:{l:'Owner investment',d:1,o:1},withdraw:{l:'Owner withdrawal',s:1,o:1},loanin:{l:'Loan received',d:1},loanrepay:{l:'Loan repayment (principal)',s:1},interest:{l:'Loan interest',s:1},transfer:{l:'Transfer',s:1,d:1},refund:{l:'Refund received',d:1,c:'e'},reimb:{l:'Reimbursement to owner',s:1,o:1},supplier:{l:'Supplier payment',s:1,c:'e'},adjust:{l:'Adjustment',d:1},reversal:{l:'Reversal'}};
+let U=null,V='home',F={q:'',type:'',acct:'',owner:'',n:25},AT='expense',last=Date.now(),lock={n:0,until:0},ADD={key:uid(),busy:0,rcp:''};
+const owner=id=>(S.owners.find(o=>o.id===id)||{}).name||'—';
+const acc=id=>(S.accounts.find(a=>a.id===id)||{}).name||'—';
+const bal=a=>a.open+S.tx.reduce((s,t)=>s+t.led.filter(l=>l[0]===a.id).reduce((x,l)=>x+l[1],0),0);
+const live=()=>S.tx.filter(t=>t.status==='posted'&&t.type!=='reversal');
+const sum=(arr,f)=>arr.reduce((s,t)=>s+f(t),0);
+// effect on profit: income minus (expenses+interest+supplier) plus refunds. Investments, loans, transfers, withdrawals excluded.
+const inc=t=>t.type==='income'?t.amt:0;
+const exp=t=>['expense','interest','supplier'].includes(t.type)?t.amt:t.type==='refund'?-t.amt:0;
+function audit(a,id,prev,next,why){S.audit.push({ts:new Date().toISOString(),by:U.id,a,id,prev,next,why:why||''})}
+function addTx(f){
+ const def=T[f.type];if(!def)throw Error('Invalid type');['desc','vendor','ref','notes','cat','method'].forEach(k=>f[k]=String(f[k]||'').slice(0,k==='notes'?500:120));
+ if(S.idem[f.key])throw Error('Already saved (duplicate submission blocked).');
+ const amt=P(f.amount);if(!amt)throw Error('Enter a valid amount (up to 2 decimals).');
+ if(!/^\d{4}-\d\d-\d\d$/.test(f.date)||isNaN(Date.parse(f.date))||f.date<'2000-01-01'||f.date>new Date(Date.now()+864e5*366).toISOString().slice(0,10))throw Error('Pick a valid date.');
+ if(amt>1e10)throw Error('Amount exceeds the ₹10 crore limit.');
+ if(def.c&&!(def.c==='i'?INC:[...Object.values(CATS).flat(),...S.cats]).includes(f.cat))throw Error('Choose a valid category.');
+ if(f.own&&!S.owners.some(o=>o.id===f.own))throw Error('Choose a valid owner.');
+ const pers=def.pers&&f.src==='personal';
+ if(def.s&&!pers&&!S.accounts.some(a=>a.id===f.src))throw Error('Choose an account.');
+ if(def.d&&!S.accounts.some(a=>a.id===f.dst))throw Error('Choose a destination account.');
+ if(def.s&&def.d&&f.src===f.dst)throw Error('Source and destination must differ.');
+ if(f.type==='adjust'&&!f.notes)throw Error('Adjustments need a reason.');
+ const t={id:'T'+String(S.seq).padStart(5,'0'),type:f.type,amt,date:f.date,desc:f.desc||'',cat:f.cat||'',vendor:f.vendor||'',method:f.method||'',src:pers?'':f.src||'',dst:f.dst||'',by:U.id,own:def.o?f.own||U.id:'',pers:pers?(f.own||U.id):'',ts:new Date().toISOString(),upd:new Date().toISOString(),ref:f.ref||'',notes:f.notes||'',rcp:f.rcp||'',status:'posted',led:[]};
+ if(def.s&&!pers)t.led.push([f.src,-amt]);if(def.d)t.led.push([f.dst,amt]);
+ S.seq++;S.idem[f.key]=t.id;S.tx.push(t);audit('create',t.id,null,{type:t.type,amt},'');return t}
+const dup=f=>live().find(t=>t.amt===P(f.amount)&&t.date===f.date&&t.type===f.type&&t.cat===(f.cat||'')&&t.vendor===(f.vendor||'')&&t.src===(f.src||''));
+function reverse(id,why){const o=S.tx.find(t=>t.id===id);if(!o||o.status!=='posted'||o.type==='reversal')return;
+ const r={...o,id:'T'+String(S.seq++).padStart(5,'0'),type:'reversal',rev:o.id,by:U.id,ts:new Date().toISOString(),upd:new Date().toISOString(),notes:'Reversal of '+o.id+': '+why,status:'posted',led:o.led.map(l=>[l[0],-l[1]]),rcp:''};
+ o.status='reversed';o.upd=r.ts;S.tx.push(r);audit('reverse',o.id,{status:'posted'},{status:'reversed',by:r.id},why)}
+// ---------- AUTH ----------
+const rs=()=>b64(crypto.getRandomValues(new Uint8Array(16)));
+async function setup(){const n=[...document.querySelectorAll('.sn')].map(x=>x.value.trim().slice(0,40)),p=[...document.querySelectorAll('.sp')].map(x=>x.value);
+ if(!n.length||n.some(x=>!x)||p.some(x=>x.length<10))return toast('Enter a name and a password of at least 10 characters for each user.',1);
+ if(new Set(n.map(x=>x.toLowerCase())).size!==n.length||new Set(p).size!==p.length)return toast('Each user needs a different name and a different password.',1);
+ const raw=crypto.getRandomValues(new Uint8Array(32)),owners=[];
+ for(let i=0;i<n.length;i++){const salt=rs();owners.push({id:'O'+(i+1),name:n[i],salt,it:IT,wrap:await seal(await kdf(p[i],salt,IT),raw)})}
+ const key=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt']);
+ const rc=await makeRec(raw);VT={v:2,owners,rec:rc.rec,data:null};blank();VT.data=await seal(key,enc.encode(JSON.stringify(S)));localStorage.setItem(K,JSON.stringify(VT));render();showRec(rc.code)}
+async function login(){const L=JSON.parse(localStorage.getItem('rfm_lock')||'{"n":0,"until":0}'),now=Date.now();
+ if(now<L.until)return toast('Too many attempts. Try again in '+Math.ceil((L.until-now)/1000)+'s.',1);
+ const o=VT.owners.find(x=>x.id===$('#lo').value),b=$('#lb');b.disabled=true;b.textContent='Unlocking…';
+ try{const raw=await open(await kdf($('#lp').value,o.salt,o.it),o.wrap);DEKraw=raw;DEK=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt']);
+  S=Object.assign({},DEF,JSON.parse(dec.decode(await open(DEK,VT.data))));U=S.owners.find(x=>x.id===o.id)||{id:o.id,name:o.name};
+  localStorage.removeItem('rfm_lock');localStorage.setItem('rfm_last',o.id);last=Date.now();V='home';render()}
+ catch(e){L.n++;L.until=L.n>=3?now+Math.min(300000,1000*2**L.n):0;localStorage.setItem('rfm_lock',JSON.stringify(L));DEK=DEKraw=null;b.disabled=false;b.textContent='Unlock';toast('Incorrect owner or password.',1)}}
+const logout=()=>{U=null;DEK=DEKraw=null;ADD={key:uid(),busy:0,rcp:''};F={q:'',type:'',acct:'',owner:'',n:25};V='home';blank();render()};
+async function makeRec(raw){const code=genRec(),salt=rs();return{code,rec:{salt,it:IT,wrap:await seal(await kdf(normRec(code),salt,IT),raw)}}}
+function showRec(code){const d=document.createElement('dialog');d.innerHTML=`<h2>Save your recovery key</h2><p class="k" style="margin-bottom:10px">This key resets a forgotten password. It is shown only once. Keep it somewhere safe and private.</p><div class="card" style="text-align:center;font-weight:700;font-size:18px;letter-spacing:1px;overflow-wrap:anywhere;user-select:all">${esc(code)}</div><div class="stack"><button type="button" class="b g" data-r="dl">Download as text file</button><button type="button" class="b" data-r="ok">I have saved it</button></div>`;
+ d.addEventListener('cancel',e=>e.preventDefault());
+ d.addEventListener('click',e=>{const t=e.target.closest('[data-r]');if(!t)return;if(t.dataset.r==='dl'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['Restaurant Ledger recovery key\n'+code+'\nKeep this private.\n'],{type:'text/plain'}));a.download='ledger-recovery-key.txt';a.click()}else{d.close();d.remove();toast('Vault created. Unlock to continue.')}});
+ document.body.appendChild(d);d.showModal()}
+async function newRec(){const v=await ask('Create recovery key',['Your password'],{ok:'Continue',note:'A new key replaces any earlier one.'});if(!v)return;
+ const o=VT.owners.find(x=>x.id===U.id);try{await open(await kdf(v[0],o.salt,o.it),o.wrap)}catch(e){return toast('Password is incorrect.',1)}
+ const rc=await makeRec(DEKraw);VT.rec=rc.rec;commit(()=>audit('recovery',U.id,null,null,'Recovery key created'));render();showRec(rc.code)}
+async function eraseAll(){const v=await ask('Erase all data',['Your password'],{ok:'Continue',note:'Use this before handing the app to someone else. All accounts, transactions, logins and the audit trail on this device will be deleted.'});if(!v)return;
+ const o=VT.owners.find(x=>x.id===U.id);try{await open(await kdf(v[0],o.salt,o.it),o.wrap)}catch(e){return toast('Password is incorrect.',1)}await wipe()}
+async function wipe(){const v=prompt('This permanently erases ALL ledger data on this device. Type ERASE to confirm.');if(v!=='ERASE')return;localStorage.removeItem(K);localStorage.removeItem('rfm_lock');localStorage.removeItem('rfm_last');sessionStorage.clear();VT=null;DEK=DEKraw=null;U=null;blank();render();toast('Everything erased. Set up a new ledger.')}
+async function resetPw(){const t=VT.owners.find(o=>o.id===$('#lo').value),others=VT.owners.filter(o=>o!==t);
+ const v=await ask('Reset '+t.name+'’s password',[others.length?'Recovery key, or another user’s password':'Recovery key','New password for '+t.name+' (min 10)','Repeat new password'],{ok:'Reset password',note:'Enter the recovery key saved when the ledger was created, or another user’s password.',extra:'<button type="button" class="b g" style="width:100%;margin-top:14px;color:var(--ex);border-color:var(--ex)" data-r="erase">Erase everything and start over</button>'});
+ if(v==='erase')return wipe();if(!v)return;
+ if(v[1].length<10||v[1]!==v[2])return toast('New passwords must match and be 10+ characters.',1);
+ let raw=null;for(const a of others){if(raw)break;try{raw=await open(await kdf(v[0],a.salt,a.it),a.wrap)}catch(e){}}
+ if(!raw&&VT.rec)try{raw=await open(await kdf(normRec(v[0]),VT.rec.salt,VT.rec.it),VT.rec.wrap)}catch(e){}
+ if(!raw)return toast('That recovery key or password is not correct.',1);
+ t.salt=rs();t.it=IT;t.wrap=await seal(await kdf(v[1],t.salt,IT),raw);localStorage.setItem(K,JSON.stringify(VT));localStorage.removeItem('rfm_lock');toast('Password reset. Unlock with the new password.')}
+async function changePw(){const v=await ask('Change password',['Current password','New password (min 10)','Repeat new password']);if(!v)return;
+ const o=VT.owners.find(x=>x.id===U.id);try{await open(await kdf(v[0],o.salt,o.it),o.wrap)}catch(e){return toast('Current password is incorrect.',1)}
+ if(v[1].length<10||v[1]!==v[2])return toast('New passwords must match and be 10+ characters.',1);
+ o.salt=rs();o.it=IT;o.wrap=await seal(await kdf(v[1],o.salt,IT),DEKraw);commit(()=>audit('password',U.id,null,null,'Password changed'));toast('Password changed.')}
+['click','keydown','touchstart'].forEach(e=>document.addEventListener(e,()=>last=Date.now(),{passive:true}));
+setInterval(()=>{if(U&&Date.now()-last>10*60000){toast('Locked after 10 minutes idle.');logout()}},15000);
+let hid=0;document.addEventListener('visibilitychange',()=>{if(document.hidden)hid=Date.now();else if(U&&hid&&Date.now()-hid>120000){logout();toast('Locked while the app was in the background.')}});
+window.addEventListener('storage',e=>{if(e.key===K&&U){VT=JSON.parse(e.newValue);logout();toast('Data changed in another tab. Locked for safety.',1)}});
+// ---------- VIEWS ----------
+const month=(d)=>d.slice(0,7);
+function home(){const L=live(),cash=sum(S.accounts,bal),I=sum(L,inc),E=sum(L,exp),inv=sum(L.filter(t=>t.type==='invest'),t=>t.amt),wd=sum(L.filter(t=>t.type==='withdraw'),t=>t.amt);
+ const loans=sum(L.filter(t=>t.type==='loanin'),t=>t.amt)-sum(L.filter(t=>t.type==='loanrepay'),t=>t.amt);
+ const owed=sum(L.filter(t=>t.pers),t=>t.amt)-sum(L.filter(t=>t.type==='reimb'),t=>t.amt);
+ const ms=[];for(let i=5;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);ms.push(d.toISOString().slice(0,7))}
+ const mx=Math.max(1,...ms.map(m=>Math.max(sum(L.filter(t=>month(t.date)===m),inc),sum(L.filter(t=>month(t.date)===m),exp))));
+ const cats={};L.forEach(t=>{if(exp(t)&&t.cat)cats[t.cat]=(cats[t.cat]||0)+exp(t)});const top=Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ return `<div class="card hero"><small>Total money available (cash, not profit)</small><div class="big num">${R(cash)}</div></div>
+ <div class="qa">${[['expense','Expense','↑'],['income','Income','↓'],['invest','Invest','+'],['transfer','Transfer','⇄'],['loanin','Loan','◇'],['withdraw','Withdraw','←'],['supplier','Supplier','▤']].map(([t,l,g])=>`<button onclick="goAdd('${t}')"><b>${g}</b>${l}</button>`).join('')}</div>
+ <div class="grid"><div class="card"><div class="k">Income</div><div class="v in num">${R(I)}</div></div><div class="card"><div class="k">Expenses</div><div class="v ex num">${R(E)}</div></div>
+ <div class="card"><div class="k">Estimated profit / loss</div><div class="v num">${R(I-E)}</div></div><div class="card"><div class="k">Net operating cash</div><div class="v num">${R(I-E)}</div></div>
+ <div class="card"><div class="k">Owner investments</div><div class="v num">${R(inv)}</div></div><div class="card"><div class="k">Owner withdrawals</div><div class="v num">${R(wd)}</div></div>
+ <div class="card"><div class="k">Outstanding loans</div><div class="v num">${R(loans)}</div></div><div class="card"><div class="k">Owed to owners</div><div class="v num">${R(owed)}</div></div></div>
+ <div class="card" style="margin-top:12px"><h2>Income vs expenses</h2><div class="cols">${ms.map(m=>`<div title="${m}"><i style="height:${sum(L.filter(t=>month(t.date)===m),inc)/mx*100}%;background:var(--in)"></i><i style="height:${sum(L.filter(t=>month(t.date)===m),exp)/mx*100}%;background:var(--ex)"></i></div>`).join('')}</div><div class="cols" style="height:auto;margin-top:4px">${ms.map(m=>`<div style="height:auto">${m.slice(5)}</div>`).join('')}</div></div>
+ <div class="card"><h2>Top expense categories</h2>${top.map(([c,v])=>`<div>${esc(c)} <span class="num" style="float:right">${R(v)}</span></div><div class="bar"><i style="width:${v/top[0][1]*100}%;background:var(--gold)"></i></div>`).join('')||'<p class="k">No expenses yet.</p>'}</div>
+ <div class="card"><h2>Account balances</h2>${S.accounts.map(a=>`<div class="row"><div>${esc(a.name)}</div><div class="a num">${R(bal(a))}</div></div>`).join('')||'<button class="b" onclick="quickCash()">Create a Cash account</button>'}</div>
+ <div class="card"><h2>Recent</h2>${S.tx.slice(-6).reverse().map(txRow).join('')||'<p class="k">Nothing recorded yet.</p>'}</div>`}
+function txRow(t){const out=['expense','withdraw','loanrepay','interest','supplier','reimb'].includes(t.type)||(t.type==='reversal'&&false),c=t.type==='income'||t.type==='refund'||t.type==='invest'||t.type==='loanin'?'in':out?'ex':'';
+ return `<div class="row"><div class="av ${c}">${c==='in'?'↓':c==='ex'?'↑':'⇄'}</div><div class="d"><b>${esc(t.desc||T[t.type].l)}</b> ${t.status==='reversed'?'<span class="tag r">reversed</span>':''}${OKR(t.rcp)?` <a class="tag" href="${esc(t.rcp)}" download="receipt-${t.id}" rel="noopener">receipt</a>`:''}<br><span class="k">${t.date} · ${T[t.type].l}${t.cat?' · '+esc(t.cat):''} · ${t.src?esc(acc(t.src)):t.pers?'Personal ('+esc(owner(t.pers))+')':''}${t.dst?' → '+esc(acc(t.dst)):''} · ${esc(owner(t.by))} · ${t.id}</span></div><div class="a num ${c}">${R(t.amt)}${t.status==='posted'&&t.type!=='reversal'?`<br><button class="b g sm" onclick="rev('${t.id}')">Reverse</button>`:''}</div></div>`}
+function list(){let L=S.tx.slice().reverse().filter(t=>(!F.type||t.type===F.type)&&(!F.acct||t.src===F.acct||t.dst===F.acct)&&(!F.owner||t.by===F.owner)&&(!F.q||(t.desc+t.vendor+t.cat+t.ref+t.id).toLowerCase().includes(F.q.toLowerCase())));
+ return `<h2>Activity</h2><div class="card"><input placeholder="Search description, vendor, category" value="${esc(F.q)}" onchange="F.q=this.value;F.n=25;render()">
+ <select onchange="F.type=this.value;render()"><option value="">All types</option>${Object.entries(T).map(([k,v])=>`<option value="${k}" ${F.type===k?'selected':''}>${v.l}</option>`)}</select>
+ <select onchange="F.acct=this.value;render()"><option value="">All accounts</option>${S.accounts.map(a=>`<option value="${a.id}" ${F.acct===a.id?'selected':''}>${esc(a.name)}</option>`)}</select>
+ <select onchange="F.owner=this.value;render()"><option value="">All owners</option>${S.owners.map(o=>`<option value="${o.id}" ${F.owner===o.id?'selected':''}>${esc(o.name)}</option>`)}</select></div>
+ <div class="card">${L.slice(0,F.n).map(txRow).join('')||'<p class="k">No matching transactions.</p>'}</div>${L.length>F.n?'<button class="b g" onclick="F.n+=25;render()">Show more</button>':''}`}
+function rev(id){const w=prompt('Reason for reversing '+id+'?');if(!w)return;commit(()=>reverse(id,w));render()}
+function goAdd(t){AT=t;ADD={key:uid(),busy:0,rcp:''};V='add';render()}
+function pick(id,el){let v=el.dataset.v??el.value;if(v==='__n'){v=(prompt('New category name')||'').trim().slice(0,40);if(!v)return;if(!S.cats.includes(v)){S.cats.push(v);save()}}
+ $('#f_'+id).value=v;document.querySelectorAll('#c_'+id+' .chip').forEach(c=>c.classList.toggle('on',c===el));
+ if(id==='src'){const r=$('#ownrow');if(r&&!T[AT].o)r.style.display=v==='personal'?'':'none'}}
+function setD(el,k){const i=$('#f_date');if(k===2){i.style.display='block'}else{i.style.display='none';i.value=ld(k)}document.querySelectorAll('#c_date .chip').forEach(c=>c.classList.toggle('on',c===el))}
+function quickCash(){commit(()=>{const a={id:'A'+S.aid++,name:'Cash',type:'Cash',open:0,status:'active',created:today()};S.accounts.push(a);audit('account',a.id,null,{name:'Cash',open:0})});render()}
+function add(){const d=T[AT],L=(S.last||{})[AT]||{},A=S.accounts.filter(a=>a.status!=='closed');
+ if(!A.length)return `<h2>Add entry</h2><div class="card"><p>Create an account first (for example Cash or Bank) so money has somewhere to move from or into.</p><button class="b" style="width:100%;margin-top:12px" onclick="quickCash()">Create a Cash account</button><button class="b g" style="width:100%;margin-top:8px" onclick="V='accounts';render()">Add a different account</button></div>`;
+ const ch=(id,list,sel,x='')=>`<div class="chips w" id="c_${id}">${list.map(([v,l])=>`<button type="button" class="chip ${v===sel?'on':''}" data-v="${esc(v)}" onclick="pick('${id}',this)">${esc(l)}</button>`).join('')}${x}</div><input type="hidden" id="f_${id}" value="${esc(sel)}">`;
+ const al=A.map(a=>[a.id,a.name]),ok=v=>A.some(a=>a.id===v),ss=(d.pers&&L.src==='personal')||ok(L.src)?L.src:A[0].id,ds=ok(L.dst)?L.dst:(A.find(a=>a.id!==ss)||A[0]).id;
+ let cat='';
+ if(d.c){const base=d.c==='i'?INC:[...Object.values(CATS).flat(),...S.cats],cnt={};S.tx.forEach(t=>{if(t.type===AT&&t.cat)cnt[t.cat]=(cnt[t.cat]||0)+1});
+  const top=[...new Set([...Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]),...(d.c==='i'?INC:['Vegetables','Grocery','Meat','Chicken','Gas','Salary','Rent','Electricity'])])].filter(c=>base.includes(c)).slice(0,8);
+  cat=`<label>Category</label>${ch('cat',top.map(c=>[c,c]),'',`<button type="button" class="chip" onclick="$('#catall').style.display='block'">More…</button>`)}<select id="catall" style="display:none" onchange="pick('cat',this)"><option value="">All categories…</option>${base.map(c=>`<option>${esc(c)}</option>`).join('')}${d.c==='e'?'<option value="__n">+ New category…</option>':''}</select>`}
+ const vs=[...new Set(S.tx.map(t=>t.vendor).filter(Boolean))].slice(-50);
+ return `<h2>Add entry</h2><div class="chips">${['expense','income','supplier','transfer','invest','withdraw','loanin','loanrepay','interest','refund','reimb','adjust'].map(k=>`<button class="chip ${k===AT?'on':''}" onclick="goAdd('${k}')">${T[k].l}</button>`).join('')}</div>
+ <div class="card"><div class="k" style="text-align:center">Amount</div><div class="amtbox"><span>₹</span><input class="amt" id="f_amount" inputmode="decimal" enterkeyhint="done" placeholder="0" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9.]/g,'')" onkeydown="if(event.key==='Enter')submitTx(0)"></div></div>
+ <div class="card">${cat}${d.s?`<label>${d.d?'From account':'Paid from'}</label>${ch('src',d.pers?[...al,['personal','Paid personally']]:al,ss)}`:'<input type="hidden" id="f_src">'}${d.d?`<label>${d.s?'To account':'Into account'}</label>${ch('dst',al,ds)}`:'<input type="hidden" id="f_dst">'}
+ <div id="ownrow" style="display:${d.o?'':'none'}"><label>${d.o?'Owner':'Paid by owner'}</label>${ch('own',S.owners.map(o=>[o.id,o.name]),U.id)}</div>
+ <label>Date</label><div class="chips w" id="c_date"><button type="button" class="chip on" onclick="setD(this,0)">Today</button><button type="button" class="chip" onclick="setD(this,1)">Yesterday</button><button type="button" class="chip" onclick="setD(this,2)">Other date</button></div><input type="date" id="f_date" value="${today()}" style="display:none">
+ <label class="chip" style="display:inline-flex;align-items:center;margin-bottom:8px">Add receipt photo or PDF<input type="file" accept="image/*,application/pdf" hidden onchange="rcp(this)"></label>
+ <details class="more" ${AT==='adjust'?'open':''}><summary>More details (vendor, note, reference)</summary>
+ ${['income','expense','supplier','refund'].includes(AT)?`<label>Vendor / customer</label><input id="f_vendor" list="vl"><datalist id="vl">${vs.map(v=>`<option value="${esc(v)}">`).join('')}</datalist><label>Payment method</label><select id="f_method">${METH.map(m=>`<option ${m===L.method?'selected':''}>${m}</option>`).join('')}</select>`:''}
+ <label>Description</label><input id="f_desc" placeholder="Leave blank to use the category"><label>Reference no.</label><input id="f_ref"><label>Notes${AT==='adjust'?' (reason required)':''}</label><textarea id="f_notes" rows="2"></textarea></details></div>
+ <div class="sticky" style="display:flex;gap:8px"><button class="b g sb" style="flex:1" onclick="submitTx(1)">Save &amp; add another</button><button class="b sb" id="sv" style="flex:1.3" onclick="submitTx(0)">Save ${esc(d.l.toLowerCase())}</button></div>`}
+function rcp(i){const f=i.files[0];if(!f)return;if(f.size>400000){i.value='';return toast('Receipt must be under 400 KB.',1)}
+ const r=new FileReader();r.onload=()=>{const h=[...new Uint8Array(r.result.slice(0,4))].map(x=>x.toString(16).padStart(2,'0')).join(''),m=h.startsWith('ffd8ff')?'image/jpeg':h==='89504e47'?'image/png':h==='25504446'?'application/pdf':'';
+  if(!m){i.value='';return toast('Only JPEG, PNG or PDF files are accepted.',1)}const u=new FileReader();u.onload=()=>{ADD.rcp=u.result;toast('Receipt attached.')};u.readAsDataURL(new Blob([r.result],{type:m}))};r.readAsArrayBuffer(f)}
+function submitTx(again){if(ADD.busy)return;const g=i=>($('#f_'+i)||{}).value||'';const f={key:ADD.key,type:AT,rcp:ADD.rcp};['amount','date','src','dst','own','cat','vendor','method','desc','ref','notes'].forEach(k=>f[k]=g(k));
+ if(!f.desc)f.desc=f.cat;
+ if(!P(f.amount)){toast('Enter the amount first.',1);$('#f_amount').focus();return}
+ if(T[AT].c&&!f.cat){toast('Tap a category.',1);return}
+ const d=dup(f);if(d&&!confirm('Possible duplicate of '+d.id+' ('+d.desc+'). Save anyway?'))return;
+ const bs=document.querySelectorAll('.sb');ADD.busy=1;bs.forEach(b=>b.disabled=true);
+ if(commit(()=>{addTx(f);(S.last=S.last||{})[AT]={src:f.src,dst:f.dst,cat:f.cat,method:f.method}})){toast('Saved '+R(P(f.amount))+(f.cat?' · '+f.cat:''));ADD={key:uid(),busy:0,rcp:''};if(!again)V='home';render()}
+ else{ADD.busy=0;bs.forEach(b=>b.disabled=false)}}
+function accounts(){return `<h2>Accounts</h2>${S.accounts.map(a=>`<div class="card"><div class="row" style="border:0"><div><b>${esc(a.name)}</b><br><span class="k">${a.type} · opened ${R(a.open)}</span></div><div class="a num">${R(bal(a))}<br><button class="b g sm" onclick="recon('${a.id}')">Reconcile</button></div></div></div>`).join('')}
+ <div class="card"><h2>New account</h2><label>Name</label><input id="an"><label>Type</label><select id="at">${['Cash','Petty cash','Bank account','UPI account','Wallet','Credit card','Other'].map(x=>`<option>${x}</option>`)}</select><label>Opening balance (₹)</label><input id="ao" inputmode="decimal" value="0"><button class="b" onclick="newAcc()">Create account</button><p class="k">Balances come only from the opening balance plus posted entries; they can't be edited.</p></div>`}
+function newAcc(){const n=$('#an').value.trim();if(!n)return alert('Name required');const o=$('#ao').value==='0'?0:P($('#ao').value);
+ commit(()=>{const a={id:'A'+S.aid++,name:n,type:$('#at').value,open:o,status:'active',created:today()};S.accounts.push(a);audit('account',a.id,null,{name:n,open:o})});render()}
+function recon(id){const a=S.accounts.find(x=>x.id===id),sys=bal(a),v=prompt('Actual balance in '+a.name+' (₹). System shows '+R(sys));if(v===null)return;const act=v==='0'?0:P(v);
+ const diff=act-sys;let why='';if(diff){why=prompt('Difference '+R(diff)+'. Reason for adjustment (leave blank to record without adjusting):')||''}
+ commit(()=>{S.recon.push({ts:new Date().toISOString(),acc:id,sys,act,diff,by:U.id,notes:why});audit('reconcile',id,{sys},{act,diff},why);
+  if(diff&&why){const t=addTx({key:uid(),type:'adjust',amount:(Math.abs(diff)/100).toFixed(2),date:today(),dst:id,notes:why,desc:'Reconciliation adjustment'});if(diff<0){t.led=[[id,diff]]}else t.led=[[id,diff]]}});render()}
+function reports(){const fr=F.from||today().slice(0,8)+'01',to=F.to||today(),L=live().filter(t=>t.date>=fr&&t.date<=to);
+ const I=sum(L,inc),E=sum(L,exp),by={};L.forEach(t=>{if(exp(t)&&t.cat)by[t.cat]=(by[t.cat]||0)+exp(t)});
+ const ent=S.tx.filter(t=>t.date>=fr&&t.date<=to).flatMap(t=>t.led),rec=ent.filter(l=>l[1]>0).reduce((s,l)=>s+l[1],0),sp=-ent.filter(l=>l[1]<0).reduce((s,l)=>s+l[1],0);
+ const open=sum(S.accounts,a=>a.open)+sum(S.tx.filter(t=>t.date<fr),t=>sum(t.led,l=>l[1]));
+ const row=(k,v,c='')=>`<div class="row"><div>${k}</div><div class="a num ${c}">${R(v)}</div></div>`;
+ return `<h2>Reports</h2><div class="card"><label>From</label><input type="date" value="${fr}" onchange="F.from=this.value;render()"><label>To</label><input type="date" value="${to}" onchange="F.to=this.value;render()"><button class="b g" onclick="csv('${fr}','${to}')">Export CSV</button></div>
+ <div class="card"><h2>Result</h2>${row('Income',I,'in')}${row('Expenses (net of refunds)',E,'ex')}${row('Net result',I-E)}${row('Owner investments',sum(L.filter(t=>t.type==='invest'),t=>t.amt))}${row('Owner withdrawals',sum(L.filter(t=>t.type==='withdraw'),t=>t.amt))}${row('Loans received',sum(L.filter(t=>t.type==='loanin'),t=>t.amt))}${row('Loan principal repaid',sum(L.filter(t=>t.type==='loanrepay'),t=>t.amt))}${row('Loan interest',sum(L.filter(t=>t.type==='interest'),t=>t.amt))}</div>
+ <div class="card"><h2>Cash flow</h2>${row('Opening balance',open)}${row('Money received',rec,'in')}${row('Money out',-sp,'ex')}${row('Closing balance',open+rec-sp)}<p class="k">Includes transfers (they net to zero overall).</p></div>
+ <div class="card"><h2>Owners</h2>${S.owners.map(o=>row(o.name+' — net contributed',sum(live().filter(t=>t.own===o.id&&t.type==='invest'),t=>t.amt)-sum(live().filter(t=>t.own===o.id&&t.type==='withdraw'),t=>t.amt))+row(o.name+' — owed (unreimbursed)',sum(live().filter(t=>t.pers===o.id),t=>t.amt)-sum(live().filter(t=>t.own===o.id&&t.type==='reimb'),t=>t.amt))).join('')}</div>
+ <div class="card"><h2>Budgets (this period)</h2>${Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([c,v])=>{const b=S.budgets[c],p=b?Math.round(v/b*100):0;return `<div>${esc(c)} <span class="num" style="float:right">${R(v)}${b?' / '+R(b)+' · '+p+'%':''}</span></div><div class="bar"><i style="width:${Math.min(100,b?p:0)}%;background:${p>=100?'var(--ex)':p>=90?'#d08a3c':p>=75?'var(--gold)':'var(--in)'}"></i></div>`}).join('')||'<p class="k">No expenses in this period.</p>'}<button class="b g sm" onclick="budget()">Set a monthly budget</button></div>`}
+function budget(){const c=prompt('Category (exact name):');if(!c)return;const v=P(prompt('Monthly budget (₹):')||'');if(!v)return;commit(()=>{S.budgets[c]=v;audit('budget',c,null,{v})});render()}
+function csv(fr,to){if(!confirm('CSV exports are not encrypted. Store the file safely. Continue?'))return;const q=s=>'"'+String(s).replace(/"/g,'""').replace(/^([=+\-@])/,"'$1")+'"';const rows=[['ID','Date','Type','Amount','Category','Vendor','Description','Source','Destination','Recorded by','Status','Reference']];
+ S.tx.filter(t=>t.date>=fr&&t.date<=to).forEach(t=>rows.push([t.id,t.date,t.type,(t.amt/100).toFixed(2),t.cat,t.vendor,t.desc,acc(t.src),acc(t.dst),owner(t.by),t.status,t.ref]));
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv'}));a.download='ledger-'+fr+'_'+to+'.csv';a.click()}
+let AF={q:'',a:'',o:'',from:'',to:'',n:30};
+const dk=ts=>{const d=new Date(ts);return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+function jr(t){const A=id=>acc(id),c=t.cat||'Uncategorised',o=t.own?owner(t.own):'',p=t.pers?owner(t.pers):'',m=t.amt;let L;
+ if(t.type==='reversal'){const x=S.tx.find(y=>y.id===t.rev);return x?jr(x).map(l=>[l[0]==='Dr'?'Cr':'Dr',l[1],l[2]]):[]}
+ switch(t.type){case'income':L=[['Dr',A(t.dst)],['Cr','Income – '+c]];break;
+ case'expense':case'supplier':L=[['Dr','Expense – '+c],['Cr',t.pers?'Payable to '+p:A(t.src)]];break;
+ case'interest':L=[['Dr','Interest expense'],['Cr',A(t.src)]];break;
+ case'refund':L=[['Dr',A(t.dst)],['Cr','Expense – '+c]];break;
+ case'invest':L=[['Dr',A(t.dst)],['Cr','Owner capital – '+o]];break;
+ case'withdraw':L=[['Dr','Owner drawings – '+o],['Cr',A(t.src)]];break;
+ case'loanin':L=[['Dr',A(t.dst)],['Cr','Loan payable']];break;
+ case'loanrepay':L=[['Dr','Loan payable'],['Cr',A(t.src)]];break;
+ case'transfer':L=[['Dr',A(t.dst)],['Cr',A(t.src)]];break;
+ case'reimb':L=[['Dr','Payable to '+o],['Cr',A(t.src)]];break;
+ case'adjust':{const l=t.led[0]||[t.dst,0],a=A(l[0]);L=l[1]>=0?[['Dr',a],['Cr','Adjustment']]:[['Dr','Adjustment'],['Cr',a]]}break;
+ default:L=[]}
+ return L.map(l=>[l[0],l[1],m])}
+const jt=L=>L.length?`<div style="overflow-x:auto"><table class="jt"><tr><th>Journal entry</th><th>Debit</th><th>Credit</th></tr>${L.map(([s,n,m])=>`<tr><td>${esc(n)}</td><td class="num">${s==='Dr'?R(m):''}</td><td class="num">${s==='Cr'?R(m):''}</td></tr>`).join('')}</table></div>`:'';
+function ah(a){const t=S.tx.find(x=>x.id===a.id),n=a.next||{},pv=a.prev||{},up={income:1,invest:1,loanin:1,refund:1};
+ if(a.a==='create'){const ty=t?t.type:n.type,l=(T[ty]||{}).l||'Entry',d=[];
+  if(t){d.push('Transaction date: '+t.date+(t.ref?' · Reference '+t.ref:''));d.push('Account: '+(t.src?acc(t.src):t.pers?'Paid personally by '+owner(t.pers):'')+(t.dst?(t.src?' → ':'')+acc(t.dst):''));if(t.cat)d.push('Category: '+t.cat);if(t.vendor)d.push('Vendor / customer: '+t.vendor);if(t.desc&&t.desc!==t.cat)d.push('Description: '+t.desc);if(t.status==='reversed')d.push('Status now: REVERSED')}
+  return{t:l+' recorded',amt:t?t.amt:n.amt,k:up[ty]?'in':['transfer','adjust'].includes(ty)?'':'ex',ic:up[ty]?'↓':ty==='transfer'?'⇄':ty==='adjust'?'≈':'↑',g:'tx',d,j:t?jr(t):[]}}
+ if(a.a==='reverse'){const rt=S.tx.find(x=>x.id===n.by);return{t:'Reversed '+a.id+(t?' ('+T[t.type].l+')':''),amt:t?t.amt:null,k:'rv',ic:'↺',g:'rev',d:['The original entry stays in the books, marked as reversed.','Offsetting entry: '+(n.by||'—')],j:rt?jr(rt):[]}}
+ if(a.a==='reconcile')return{t:'Reconciled '+acc(a.id),amt:n.diff,k:'',ic:'≈',g:'acct',d:['System balance: '+R(pv.sys||0),'Actual balance: '+R(n.act||0),'Difference: '+R(n.diff||0)+(n.diff?'':' (matched)')],j:[]};
+ if(a.a==='account')return{t:'Account created: '+(n.name||a.id),amt:n.open,k:'',ic:'+',g:'acct',d:['Opening balance is not income.'],j:[]};
+ if(a.a==='budget')return{t:'Monthly budget set: '+a.id,amt:n.v,k:'',ic:'%',g:'acct',d:[],j:[]};
+ return{t:a.a==='user'?'User added: '+(n.name||a.id):a.a==='password'?'Password changed':a.a==='recovery'?'Recovery key created':a.a,amt:null,k:'',ic:'●',g:'sec',d:[],j:[]}}
+function auditCsv(){if(!confirm('CSV exports are not encrypted. Store the file safely. Continue?'))return;const q=v=>'"'+String(v).replace(/"/g,'""').replace(/^([=+\-@])/,"'$1")+'"';
+ const rows=[['Seq','Timestamp','User','Action','Reference','Summary','Reason','Seal']].concat(S.audit.map((a,i)=>[i+1,a.ts,owner(a.by),a.a,a.id,ah(a).t,a.why||'',a.h||'']));
+ const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([rows.map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv'}));l.download='audit-trail-'+today()+'.csv';l.click()}
+function auditV(){const all=S.audit.map((a,i)=>({a,i,...ah(a)})),qq=AF.q.toLowerCase();
+ const rows=all.filter(x=>(!AF.a||x.g===AF.a)&&(!AF.o||x.a.by===AF.o)&&(!AF.from||dk(x.a.ts)>=AF.from)&&(!AF.to||dk(x.a.ts)<=AF.to)&&(!qq||(x.t+x.d.join(' ')+x.a.id+(x.a.why||'')).toLowerCase().includes(qq))).reverse();
+ const cnt=g=>all.filter(x=>x.g===g).length;let last='',h='';
+ rows.slice(0,AF.n).forEach(x=>{const k=dk(x.a.ts),a=x.a;if(k!==last){last=k;h+=`<div class="dh">${new Date(a.ts).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</div>`}
+  h+=`<details class="ae"><summary><span class="ai ${x.k}">${x.ic}</span><span class="at"><b>${esc(x.t)}</b><span class="k">${new Date(a.ts).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} · ${esc(owner(a.by))} · ${esc(a.id)}</span></span>${typeof x.amt==='number'?`<span class="aa num">${R(x.amt)}</span>`:''}</summary><div class="ab">${x.d.map(l=>`<div>${esc(l)}</div>`).join('')}${a.why?`<div class="why"><b>Reason:</b> ${esc(a.why)}</div>`:''}${jt(x.j)}<div class="k">Entry #${x.i+1} · seal ${a.h?a.h.slice(0,12):'pending'} · ${esc(a.ts)}</div></div></details>`});
+ const sel=(k,v,o)=>`<select onchange="AF.${k}=this.value;AF.n=30;render()">${o.map(([a,b])=>`<option value="${esc(a)}" ${v===a?'selected':''}>${esc(b)}</option>`).join('')}</select>`;
+ return `<h2>Audit trail</h2><p class="k" style="margin:-8px 0 14px">A permanent record of who did what and when. Open any entry to see the accounting journal behind it.</p>
+ <div class="card" style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap"><div style="flex:1;min-width:200px"><b>Tamper-evident record</b><div class="k">Each entry is cryptographically linked to the one before it. Entries cannot be edited or deleted.</div>${INT.length?`<div style="margin-top:6px"><span class="tag ${INT[0][0]?'ok':'r'}">${INT[0][0]?'PASS':'FAIL'}</span> ${esc(INT[0][1])}</div>`:''}</div><button class="b g sm noprint" onclick="verify()">Verify now</button></div>
+ <div class="ast"><div class="card"><div class="k">Entries</div><div class="v num">${all.length}</div></div><div class="card"><div class="k">Transactions recorded</div><div class="v num">${cnt('tx')}</div></div><div class="card"><div class="k">Reversals</div><div class="v num">${cnt('rev')}</div></div><div class="card"><div class="k">Accounts and reconciliations</div><div class="v num">${cnt('acct')}</div></div></div>
+ <div class="card noprint"><div class="fg"><div><label>Search</label><input value="${esc(AF.q)}" placeholder="Reference, reason, category" onchange="AF.q=this.value;AF.n=30;render()"></div>
+ <div><label>Show</label>${sel('a',AF.a,[['','All activity'],['tx','Transactions recorded'],['rev','Reversals'],['acct','Accounts, budgets, reconciliations'],['sec','Security']])}</div>
+ <div><label>Owner</label>${sel('o',AF.o,[['','Both owners'],...S.owners.map(o=>[o.id,o.name])])}</div>
+ <div><label>From</label><input type="date" value="${AF.from}" onchange="AF.from=this.value;render()"></div><div><label>To</label><input type="date" value="${AF.to}" onchange="AF.to=this.value;render()"></div></div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="b g sm" onclick="auditCsv()">Export CSV</button><button class="b g sm" onclick="document.querySelectorAll('details.ae').forEach(d=>d.open=true);window.print()">Print for accountant</button></div></div>
+ ${h||'<div class="card"><p class="k">No audit entries match these filters.</p></div>'}${rows.length>AF.n?'<button class="b g noprint" style="width:100%" onclick="AF.n+=30;render()">Show older entries</button>':''}
+ <p class="k">${rows.length} of ${all.length} entries shown, newest first. Times are in your local time zone.</p>`}
+async function verify(){const o=[],ck=(ok,m)=>o.push([ok,m]);let p='',bad=0;
+ for(const a of S.audit){if(!a.h||await sha(p+AH(a))!==a.h)bad++;p=a.h}
+ ck(!bad,bad?bad+' broken or unsealed audit link(s)':'Audit chain intact ('+S.audit.length+' entries)');
+ const ids=S.tx.map(t=>t.id);ck(ids.length===new Set(ids).size,'Transaction IDs are unique');
+ ck(S.tx.every(t=>t.type!=='transfer'||sum(t.led,l=>l[1])===0),'Every transfer nets to zero');
+ ck(S.tx.every(t=>t.type!=='reversal'||(S.tx.find(x=>x.id===t.rev)||{}).status==='reversed'),'Every reversal links to a reversed entry');
+ ck(S.tx.every(t=>t.led.every(l=>S.accounts.some(a=>a.id===l[0]))),'No ledger line points to a missing account');
+ ck(sum(S.accounts,bal)===sum(S.accounts,a=>a.open)+sum(S.tx,t=>sum(t.led,l=>l[1])),'Account balances equal openings plus ledger');
+ INT=o;render();toast(o.every(x=>x[0])?'All integrity checks passed.':'Integrity problems found.',!o.every(x=>x[0]))}
+function more(){const used=new Blob([localStorage.getItem(K)||'']).size,r=(k,v)=>`<div class="row"><div class="d">${k}</div><div class="a" style="font-weight:500">${v}</div></div>`;
+ return `<h2>More</h2><div class="card menu">${[['accounts','Accounts'],['audit','Audit history']].map(([k,l])=>`<button onclick="V='${k}';render()">${l}<span>›</span></button>`).join('')}</div>
+ <h2>Security</h2><div class="card">${r('Encryption at rest','AES-256-GCM')}${r('Key derivation','PBKDF2-SHA-256, 600k')}${r('Auto-lock','10 min idle · 2 min hidden')}${r('Audit trail','SHA-256 hash chain')}${r('Storage used',(used/1024).toFixed(0)+' KB of ~5 MB')}${r('Users',VT.owners.map(o=>esc(o.name)).join(', '))}${r('Recovery key',VT.rec?'Set':'Not set')}${r('Signed in as',esc(U.name))}</div>
+ ${INT.length?`<div class="card"><h2>Integrity report</h2>${INT.map(([ok,m])=>`<div class="row"><span class="tag ${ok?'ok':'r'}">${ok?'PASS':'FAIL'}</span><div class="d">${esc(m)}</div></div>`).join('')}</div>`:''}
+ <div class="card stack"><button class="b g" onclick="verify()">Run integrity check</button><button class="b g" onclick="changePw()">Change password</button><button class="b g" onclick="addUser()">Add a user</button><button class="b g" onclick="newRec()">${VT.rec?'Replace':'Create'} recovery key</button><button class="b g" onclick="backup()">Download encrypted backup</button><input type="file" id="rs" accept="application/json" hidden onchange="restore(this)"><button class="b g" onclick="$('#rs').click()">Restore encrypted backup</button><button class="b g" style="color:var(--ex);border-color:var(--ex)" onclick="eraseAll()">Erase all data (for handover)</button><button class="b" onclick="logout()">Lock and sign out</button></div>
+ <p class="k">Backups stay encrypted and need an owner password to open. If both passwords are lost, the data cannot be recovered.</p>`}
+async function backup(){await Q;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([localStorage.getItem(K)],{type:'application/json'}));a.download='ledger-encrypted-backup-'+today()+'.json';a.click()}
+function restore(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const v=JSON.parse(r.result);if(v.v!==2||!Array.isArray(v.owners)||!v.data)throw 0;if(!confirm('Replace ALL data on this device with this backup? This cannot be undone.'))return;localStorage.setItem(K,r.result);location.reload()}catch(e){toast('Not a valid encrypted backup file.',1)}};r.readAsText(f)}
+const ic=d=>`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const NAV=[['home','Home',ic('<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>')],['list','Activity',ic('<path d="M4 6h16M4 12h16M4 18h10"/>')],['add','Add',ic('<path d="M12 5v14M5 12h14"/>')],['reports','Reports',ic('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>')],['more','More',ic('<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>')]];
+const DN=[['home','Dashboard'],['list','Activity'],['add','Add entry'],['accounts','Accounts'],['reports','Reports'],['audit','Audit'],['more','Settings']];
+const go=k=>k==='add'?goAdd(AT):(V=k,render());
+const LOCK=ic('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>');
+const GB=`<section class="gb"><svg width="58" height="58" viewBox="0 0 56 56" aria-hidden="true"><circle cx="28" cy="28" r="26" fill="none" stroke="#B99555" stroke-width="1.5"/><circle cx="28" cy="28" r="20" fill="none" stroke="#B99555" stroke-opacity=".5"/><text x="28" y="37" text-anchor="middle" font-family="DM Serif Display,Georgia,serif" font-size="26" fill="#fff">R</text></svg><h1>Restaurant Ledger</h1><p>Private books for your restaurant</p><ul><li>Encrypted on this device</li><li>Tamper-evident audit trail</li><li>Auto-locks when idle</li></ul></section>`;
+function selOwner(el){$('#lo').value=el.dataset.v;document.querySelectorAll('.oc').forEach(c=>c.classList.toggle('on',c===el));$('#lp').focus()}
+const ownerRow=i=>`<div class="card orow" style="box-shadow:none"><div class="k" style="display:flex;justify-content:space-between"><span>${i===1?'First owner':'User '+i}</span>${i>1?'<a href="#" onclick="this.closest(\'.orow\').remove();return false">Remove</a>':''}</div><label>Name</label><input class="sn" autocomplete="off"><label>Password (min 10 characters)</label><input class="sp" type="password" autocomplete="new-password"></div>`;
+function addRow(){const c=document.querySelectorAll('.orow').length;if(c>=4)return toast('Maximum of 4 users.',1);$('#orows').insertAdjacentHTML('beforeend',ownerRow(c+1))}
+async function addUser(){if(VT.owners.length>=4)return toast('Maximum of 4 users.',1);
+ const v=await ask('Add a user',['Your password',['New user’s name','text'],'New user’s password (min 10)','Repeat password'],{ok:'Add user',note:'The new user can see and record all of the business data.'});if(!v)return;
+ const me=VT.owners.find(x=>x.id===U.id);try{await open(await kdf(v[0],me.salt,me.it),me.wrap)}catch(e){return toast('Your password is incorrect.',1)}
+ const n=v[1].trim().slice(0,40);if(!n||VT.owners.some(o=>o.name.toLowerCase()===n.toLowerCase()))return toast('Enter a unique name.',1);
+ if(v[2].length<10||v[2]!==v[3])return toast('Passwords must match and be 10+ characters.',1);
+ const id='O'+(Math.max(...VT.owners.map(o=>+o.id.slice(1)))+1),salt=rs(),wrap=await seal(await kdf(v[2],salt,IT),DEKraw);
+ commit(()=>{VT.owners.push({id,name:n,salt,it:IT,wrap});S.owners.push({id,name:n});audit('user',id,null,{name:n},'User added')});toast(n+' added. They can now sign in.');render()}
+function render(){const A=$('#app');document.body.classList.toggle('gated',!VT||!U);
+ if(!VT){A.innerHTML=`<div class="gate"><div class="gw">${GB}<section class="gf"><div><h2>Create your ledger</h2><p class="k" style="margin-bottom:14px">Create your own login. Add another user if a partner will share the books. There is no public signup.</p>
+  <div id="orows">${ownerRow(1)}</div><button type="button" class="b g sm" style="margin-bottom:12px" onclick="addRow()">+ Add another user</button>
+  <div class="warn">Your data is encrypted with these passwords. If both are lost, it cannot be recovered, so keep an encrypted backup.</div><button class="b go" onclick="setup()">Create secure vault</button></div></section></div></div>`;return}
+ if(!U){const h=new Date().getHours(),gr=h<12?'Good morning':h<17?'Good afternoon':'Good evening',lo=localStorage.getItem('rfm_last'),sel=S.owners.some(o=>o.id===lo)?lo:S.owners[0].id;
+  A.innerHTML=`<div class="gate"><div class="gw">${GB}<section class="gf"><div><h2>${gr}</h2><p class="k">Who is unlocking the books?</p>
+  <div class="ocs">${S.owners.map(o=>`<button type="button" class="oc ${o.id===sel?'on':''}" data-v="${o.id}" onclick="selOwner(this)"><span class="av2">${esc(o.name[0].toUpperCase())}</span><b>${esc(o.name)}</b></button>`).join('')}</div><input type="hidden" id="lo" value="${sel}">
+  <label for="lp">Password</label><div class="pw"><input id="lp" type="password" autocomplete="current-password" enterkeyhint="go" onkeydown="if(event.key==='Enter')login()"><button type="button" class="eye" onclick="const i=$('#lp');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'Show':'Hide'">Show</button></div>
+  <button class="b go" id="lb" onclick="login()">Unlock</button><p style="text-align:center;margin-top:14px"><a href="#" onclick="resetPw();return false">Forgot password?</a></p>
+  <div class="lk">${LOCK}<span>Encrypted on this device · locks automatically when idle</span></div></div></section></div></div>`;setTimeout(()=>{const x=$('#lp');x&&x.focus()},80);return}
+ const views={home,list,add,accounts,reports,audit:auditV,more};
+ A.innerHTML=`<header><div class="hw"><h1>Restaurant Ledger</h1><nav class="dn">${DN.map(([k,l])=>`<button class="${V===k?'on':''}" onclick="go('${k}')">${l}</button>`).join('')}</nav><div class="ub"><button class="lockbtn" onclick="logout()" aria-label="Lock and sign out" title="Lock and sign out">${LOCK}</button><span class="who" title="${esc(U.name)}">${esc(U.name[0].toUpperCase())}</span></div></div></header><main>${views[V]()}</main><nav class="bn">${NAV.map(([k,l,i])=>`<button class="${k==='add'?'plus':''} ${(V===k||(k==='more'&&['accounts','audit','more'].includes(V)))?'on':''}" aria-label="${l}" onclick="go('${k}')">${i}${k==='add'?'':l}</button>`).join('')}</nav>`;A.querySelectorAll('input:not([type]),textarea').forEach(e=>e.maxLength=e.tagName==='TEXTAREA'?500:120);if(V==='add')setTimeout(()=>{const a=$('#f_amount');a&&a.focus()},80)}
+render();
+</script></body></html>
